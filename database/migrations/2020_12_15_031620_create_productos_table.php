@@ -20,6 +20,7 @@ class CreateProductosTable extends Migration
             $table->float('precio_publico');
             $table->float('precio_tecnico');
             $table->float('precio_compra');
+            $table->float('precio_distribuidor');
             $table->integer('stock');
             $table->timestamps();
             $table->softDeletes();
