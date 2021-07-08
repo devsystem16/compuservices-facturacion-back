@@ -89,7 +89,9 @@ class ClienteController extends Controller
 
     public function listado($limite)
     {
-        return Clientes::take($limite)->get();
+        return Clientes::select('id as codigo' ,'cedula', 'nombres','telefono', 'direccion' ,'correo')
+        ->orderBy('nombres' , 'asc')
+        -> take($limite)->get();
     }
 
 

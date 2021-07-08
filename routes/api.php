@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ClienteController;
 use App\Http\Controllers\OrdenesController;
+use App\Http\Controllers\ProductosController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -23,8 +24,13 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
 
 
 Route::resource('clientes', ClienteController::class);
-Route::get('/clientes/listado/{limite}' ,  [ClienteController::class,'listado']);
+Route::get('/clientes/listado/{limite}',  [ClienteController::class, 'listado']);
 
 
 Route::resource('ordenes', OrdenesController::class);
-Route::get('/ordenes/listado/{limite}' ,  [OrdenesController::class,'listado']);
+Route::get('/ordenes/listado/{limite}',  [OrdenesController::class, 'listado']);
+
+
+
+Route::get('/productos/listado/{limite}',  [ProductosController::class, 'listado']);
+Route::get('/productos/buscarProducto/{texto?}',  [ProductosController::class, 'buscarProducto']);

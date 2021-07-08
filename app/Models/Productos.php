@@ -13,7 +13,7 @@ class Productos extends Model
 
     protected $table ='productos';
     protected $dates = ['deleted_at'];
-    protected $fillable = ['descripcion','codigo_barra','precio_publico','precio_tecnico','precio_compra' ,'stock'];
+    protected $fillable = ['nombre', 'descripcion','codigo_barra','precio_publico','precio_tecnico','precio_compra' , 'precio_distribuidor','stock'];
 
 
 }

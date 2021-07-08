@@ -21,6 +21,7 @@ class CreateFacturasTable extends Migration
             $table->float('iva');
             $table->float('total');
             $table->string('observacion');
+            $table->string('estado');
             $table->timestamps();
             $table->foreign('cliente_id')->references('id')->on("clientes");
             $table->softDeletes();

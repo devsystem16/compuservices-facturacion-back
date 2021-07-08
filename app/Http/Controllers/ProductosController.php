@@ -83,4 +83,36 @@ class ProductosController extends Controller
     {
         Productos::findOrFail($id)->delete();
     }
+
+    public function listado($limite)
+    {
+        return Productos::select(
+            'id as codigo',
+            'nombre',
+            'descripcion',
+            'precio_publico',
+            'precio_tecnico',
+            'precio_compra',
+            'precio_distribuidor',
+            'stock'
+        )
+            ->orderBy('nombre', 'asc')
+            ->take($limite)->get();
+    }
+
+    public function buscarProducto($texto = '')
+    {
+        return Productos::select(
+            'id as codigo',
+            'nombre',
+            'descripcion',
+            'precio_publico',
+            'precio_tecnico',
+            'precio_compra',
+            'precio_distribuidor',
+            'stock'
+        )
+            ->where('nombre', 'like', '%' . $texto . '%')
+            ->orderBy('nombre', 'asc')->get();
+    }
 }
