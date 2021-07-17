@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Facturas;
+use App\Models\Detalles;
 use Illuminate\Http\Request;
 
 class FacturasController extends Controller
@@ -35,10 +36,22 @@ class FacturasController extends Controller
      */
     public function store(Request $request)
     {
-        $facturas = Facturas::create($request->all());
-        return  $facturas;
-    }
 
+        $facturas = Facturas::create($request->cabecera);
+
+        foreach ($request->detalle as $detalle) {
+            Detalles::create(
+                [
+                    'factura_id' => $facturas->id,
+                    'producto_id' => $detalle["producto_id"],
+                    'cantidad' => $detalle["cantidad"],
+                    'subtotal' =>  $detalle["subtotal"]
+                ]
+            );
+        }
+
+        return  ["estado" =>  200 ,  "factura" => $facturas ];
+    }
     /**
      * Display the specified resource.
      *

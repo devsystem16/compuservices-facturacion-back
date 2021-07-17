@@ -20,7 +20,7 @@ class CreateFacturasTable extends Migration
             $table->float('subtotal');
             $table->float('iva');
             $table->float('total');
-            $table->string('observacion');
+            $table->string('observacion')->nullable();
             $table->string('estado');
             $table->timestamps();
             $table->foreign('cliente_id')->references('id')->on("clientes");
