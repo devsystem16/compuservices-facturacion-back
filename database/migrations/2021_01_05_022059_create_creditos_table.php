@@ -19,7 +19,7 @@ class CreateCreditosTable extends Migration
             $table->date('fecha');
             $table->string('detalle')->nullable();
             $table->float('saldo');
-            $table->string('total');
+            $table->float('total');
             $table->timestamps();
 
             $table->foreign('cliente_id')->references('id')->on("clientes");

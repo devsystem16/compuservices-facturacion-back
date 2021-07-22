@@ -37,8 +37,8 @@ class ClienteController extends Controller
      */
     public function store(Request $request)
     {
-       $cliente = Clientes::create($request->all());
-       return  $cliente;
+        $cliente = Clientes::create($request->all());
+        return  $cliente;
     }
 
     /**
@@ -89,11 +89,8 @@ class ClienteController extends Controller
 
     public function listado($limite)
     {
-        return Clientes::select('id as codigo' ,'cedula', 'nombres','telefono', 'direccion' ,'correo')
-        ->orderBy('nombres' , 'asc')
-        -> take($limite)->get();
+        return Clientes::select('id', 'cedula', 'nombres', 'telefono', 'direccion', 'correo')
+            ->orderBy('updated_at', 'desc')
+            ->take($limite)->get();
     }
-
-
-
 }

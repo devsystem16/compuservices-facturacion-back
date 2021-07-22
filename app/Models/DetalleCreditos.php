@@ -11,9 +11,7 @@ class DetalleCreditos extends Model
     use HasFactory;
     use SoftDeletes;
 
-    protected $table ='clientes';
+    protected $table = 'detalle_creditos';
     protected $dates = ['deleted_at'];
-    protected $fillable = ['credito_id','abono','fecha','comentario' ];
-
-
+    protected $fillable = ['credito_id', 'abono', 'fecha', 'comentario'];
 }
