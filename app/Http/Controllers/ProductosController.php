@@ -87,7 +87,7 @@ class ProductosController extends Controller
     public function listado($limite)
     {
         return Productos::select(
-            'id as codigo',
+            'id',
             'nombre',
             'descripcion',
             'precio_publico',
@@ -96,7 +96,7 @@ class ProductosController extends Controller
             'precio_distribuidor',
             'stock'
         )
-            ->orderBy('nombre', 'asc')
+            ->orderBy('updated_at', 'desc')
             ->take($limite)->get();
     }
 

@@ -22,11 +22,7 @@ class ClientesFactory extends Factory
     public function definition()
     {
         return [
-            'cedula' =>  $this->faker->unique()->phoneNumber
-            ,'nombres' => $this->faker->name
-            ,'telefono' => $this->faker->phoneNumber
-            ,'direccion' => $this->faker->address
-            ,'correo' => $this->faker->unique()->safeEmail
+            'cedula' =>  $this->faker->unique()->phoneNumber, 'nombres' => $this->faker->name, 'telefono' => $this->faker->phoneNumber, 'direccion' => $this->faker->address, 'correo' => $this->faker->unique()->safeEmail, 'observacion' => $this->faker->phoneNumber
         ];
     }
 }

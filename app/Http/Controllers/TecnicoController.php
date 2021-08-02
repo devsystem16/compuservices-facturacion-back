@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Ordenes;
+use App\Models\Tecnicos;
 use Illuminate\Http\Request;
 
-class OrdenesController extends Controller
+class TecnicoController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -14,7 +14,7 @@ class OrdenesController extends Controller
      */
     public function index()
     {
-        return Ordenes::orderBy('updated_at', 'desc')->get();
+        return Tecnicos::all();
     }
 
     /**
@@ -35,8 +35,7 @@ class OrdenesController extends Controller
      */
     public function store(Request $request)
     {
-        $ordenes = Ordenes::create($request->all());
-        return  $ordenes;
+        //
     }
 
     /**
@@ -47,7 +46,7 @@ class OrdenesController extends Controller
      */
     public function show($id)
     {
-        return Ordenes::find($id);
+        //
     }
 
     /**
@@ -70,7 +69,7 @@ class OrdenesController extends Controller
      */
     public function update(Request $request, $id)
     {
-        return   Ordenes::find($id)->update($request->all());
+        //
     }
 
     /**
@@ -81,11 +80,6 @@ class OrdenesController extends Controller
      */
     public function destroy($id)
     {
-        Ordenes::findOrFail($id)->delete();
-    }
-
-    public function listado($limite)
-    {
-        return Ordenes::take($limite)->orderBy('updated_at', 'desc')->get();
+        //
     }
 }

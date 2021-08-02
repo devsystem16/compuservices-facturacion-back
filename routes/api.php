@@ -5,7 +5,7 @@ use App\Http\Controllers\OrdenesController;
 use App\Http\Controllers\ProductosController;
 use App\Http\Controllers\CreditosController;
 use App\Http\Controllers\FacturasController;
-
+use App\Http\Controllers\TecnicoController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -34,7 +34,10 @@ Route::get('/ordenes/listado/{limite}',  [OrdenesController::class, 'listado']);
 Route::get('/productos/listado/{limite}',  [ProductosController::class, 'listado']);
 Route::get('/productos/buscarProducto/{texto?}',  [ProductosController::class, 'buscarProducto']);
 
+Route::resource('productos', ProductosController::class);
 
+
+Route::resource('tecnicos', TecnicoController::class);
 Route::resource('facturas', FacturasController::class);
 Route::resource('creditos', CreditosController::class);
 Route::post('/creditos/abonar',  [CreditosController::class, 'abonar']);
