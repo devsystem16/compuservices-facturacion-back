@@ -17,7 +17,7 @@ class CreateCreditosTable extends Migration
             $table->increments('id');
             $table->integer('cliente_id')->unsigned();
             $table->date('fecha');
-            $table->string('detalle')->nullable();
+            $table->string('detalle')->nullable()->default("");
             $table->float('saldo');
             $table->float('total');
             $table->timestamps();

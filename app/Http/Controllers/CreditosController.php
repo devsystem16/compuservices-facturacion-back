@@ -6,6 +6,7 @@ use App\Models\Creditos;
 use App\Models\DetalleCreditos;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
+use Carbon\Carbon;
 
 class CreditosController extends Controller
 {
@@ -80,12 +81,15 @@ class CreditosController extends Controller
         $credito->saldo = $saldo;
         $credito->save();
 
-        $now = new \DateTime();
+
+        $date = Carbon::now();
+        $fecha_hoy = Carbon::parse($date->toDateTimeString())->format('Y-m-d');
+
         DetalleCreditos::create(
             [
                 'credito_id' => $credito->id,
                 'abono' => $request->abono,
-                'fecha' => $now->format('Y-m-d'),
+                'fecha' => $fecha_hoy,
                 'comentario' =>  "Abono"
             ]
         );
@@ -98,8 +102,10 @@ class CreditosController extends Controller
 
 
 
-        $creditos = Creditos::select('creditos.id as id',  'creditos.cliente_id', 'creditos.fecha', 'creditos.detalle', 'creditos.saldo', 'creditos.total', 'clientes.nombres as cliente')
+        $creditos = Creditos::select('creditos.id as id',  'creditos.cliente_id', 'creditos.fecha', 'creditos.detalle', 'creditos.saldo', 'creditos.total', 'clientes.nombres as cliente', 'clientes.telefono as telefono')
             ->join('clientes', 'creditos.cliente_id', 'clientes.id')
+            ->orderBy('creditos.updated_at', 'desc')
+            ->where('creditos.saldo', '>', 0)
             ->get();
 
 
@@ -115,6 +121,7 @@ class CreditosController extends Controller
             $collection->push([
                 "id" => $credito->id,
                 "cliente" => $credito->cliente,
+                "telefono" => $credito->telefono,
                 "fecha" => $credito->fecha,
                 "detalle" => $credito->detalle,
                 "saldo" => $credito->saldo,

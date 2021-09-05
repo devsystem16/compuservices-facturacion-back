@@ -18,23 +18,27 @@ class CreateOrdenesTable extends Migration
             $table->integer('cliente_id')->unsigned();
             $table->integer('tecnico_id')->unsigned();
             $table->date('fecha');
-            $table->string('equipo' ,'700')->nullable();
-            $table->string('marca' ,'700')->nullable();
-            $table->string('modelo' ,'700')->nullable();
-            $table->string('serie' ,'700')->nullable();
-            $table->string('falla' ,'3000')->nullable();
-            $table->string('trabajo','3000')->nullable();
+            $table->string('equipo', '700')->nullable()->default("");
+            $table->string('marca', '700')->nullable()->default("");
+            $table->string('modelo', '700')->nullable()->default("");
+            $table->string('serie', '700')->nullable()->default("");
+            $table->string('falla', '3000')->nullable()->default("");
+            $table->string('trabajo', '3000')->nullable()->default("");
             $table->float('total');
             $table->float('saldo');
-            $table->float('abono')->nullable();
-            $table->string('observacion')->nullable();
+            $table->float('abono')->nullable()->default(0);
+            $table->string('observacion')->nullable()->default("");
 
+            $table->boolean('camara');
+            $table->boolean('teclado');
+            $table->boolean('microfono');
+            $table->boolean('parlantes');
+            $table->boolean('estado')->default(true);
             $table->timestamps();
 
             $table->foreign('cliente_id')->references('id')->on("clientes");
             $table->foreign('tecnico_id')->references('id')->on("tecnicos");
             $table->softDeletes();
-
         });
     }
 

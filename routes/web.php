@@ -13,6 +13,36 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
+
+
 Route::get('/', function () {
     return view('welcome');
 });
+
+Route::get('/pepe', function () {
+    return "hola";
+});
+
+
+Route::get('/login', function () {
+    return view('welcome');
+});
+
+Route::get('public/login', function () {
+    return view('welcome');
+});
+
+Route::get('public/app/login', function () {
+    return view('welcome');
+});
+Route::get('/public/app/login', function () {
+    return view('welcome');
+});
+
+
+// Route::get('/app/dashboard', function () {
+//     return view('welcome');
+// });
+
+
+Route::view("/app/{path?}", "welcome");

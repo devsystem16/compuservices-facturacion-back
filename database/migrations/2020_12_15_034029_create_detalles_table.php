@@ -20,6 +20,7 @@ class CreateDetallesTable extends Migration
             $table->integer('producto_id')->unsigned();
             $table->integer('cantidad');
             $table->float('subtotal');
+            $table->string('precio_tipo')->nullable()->default("publico");
             $table->foreign('factura_id')->references('id')->on("facturas");
             $table->foreign('producto_id')->references('id')->on("productos");
             $table->timestamps();

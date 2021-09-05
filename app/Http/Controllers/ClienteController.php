@@ -37,8 +37,12 @@ class ClienteController extends Controller
      */
     public function store(Request $request)
     {
+        $cliente = Clientes::where('cedula', '=',  $request->cedula)->first();
+        if ($cliente != null)
+            return  ["estado" => 203, "mensaje" => "El cliente ya existe.", "cliente" => $cliente];
+
         $cliente = Clientes::create($request->all());
-        return  $cliente;
+        return  ["estado" => 201, "mensaje" => "Cliente Regitrado correctamente.", "cliente" => $cliente];
     }
 
     /**
@@ -83,14 +87,24 @@ class ClienteController extends Controller
      */
     public function destroy($id)
     {
-        Clientes::findOrFail($id)->delete();
+        try {
+            $response =  Clientes::findOrFail($id)->delete();
+        } catch (\Exception $e) {
+            $response = 0;
+        }
+        if ($response == 1) {
+            return ["estado" => 200, "mensaje" => "Cliente Eliminado."];
+        } else {
+            return ["estado" => 401, "mensaje" => "Ocurrió un error."];
+        }
     }
 
 
     public function listado($limite)
     {
-        return Clientes::select('id', 'cedula', 'nombres', 'telefono', 'direccion', 'correo')
+        return Clientes::select('id', 'cedula', 'nombres', 'telefono', 'direccion', 'correo', 'observacion')
             ->orderBy('updated_at', 'desc')
-            ->take($limite)->get();
+            ->take($limite)
+            ->get();
     }
 }

@@ -6,6 +6,7 @@ use App\Http\Controllers\ProductosController;
 use App\Http\Controllers\CreditosController;
 use App\Http\Controllers\FacturasController;
 use App\Http\Controllers\TecnicoController;
+use App\Http\Controllers\UsuariosController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -40,5 +41,17 @@ Route::resource('productos', ProductosController::class);
 Route::resource('tecnicos', TecnicoController::class);
 Route::resource('facturas', FacturasController::class);
 Route::resource('creditos', CreditosController::class);
+
+Route::get('/reporte/ventas',  [FacturasController::class, 'reporteDiario']);
+Route::get('/reporte/historicofacturas',  [FacturasController::class, 'historiofacturas']);
+
+
 Route::post('/creditos/abonar',  [CreditosController::class, 'abonar']);
 Route::get('/creditos/lista/listado',  [CreditosController::class, 'ListadoCreditos']);
+
+
+Route::post('/ordenes/abonos/nuevoabono',  [OrdenesController::class, 'abonar']);
+
+
+
+Route::post('/usuarios/acceso/login',  [UsuariosController::class, 'login']);

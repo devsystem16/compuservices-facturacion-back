@@ -15,9 +15,9 @@ class CreateProductosTable extends Migration
     {
         Schema::create('productos', function (Blueprint $table) {
             $table->increments('id');
-            $table->string('nombre' ,'500');
-            $table->string('descripcion' ,'500');
-            $table->string('codigo_barra' ,'1000')->nullable();
+            $table->string('nombre', '500');
+            $table->string('descripcion', '500')->nullable()->default("");
+            $table->string('codigo_barra', '1000')->nullable()->default("");
             $table->float('precio_publico');
             $table->float('precio_tecnico');
             $table->float('precio_compra');

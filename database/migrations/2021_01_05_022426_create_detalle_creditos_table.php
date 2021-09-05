@@ -18,7 +18,7 @@ class CreateDetalleCreditosTable extends Migration
             $table->integer('credito_id')->unsigned();
             $table->float('abono');
             $table->date('fecha');
-            $table->string('comentario')->nullable();
+            $table->string('comentario')->nullable()->default("");
             $table->timestamps();
 
             $table->foreign('credito_id')->references('id')->on("creditos");

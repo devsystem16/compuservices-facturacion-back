@@ -1,0 +1,1 @@
+{"version":3,"sources":["webpack://src/views/puntoVenta/listadoProductos/listadoProductos.css"],"names":[],"mappings":"AAEA,qBACI,sCACJ,CACA,sBACI,kDACJ","file":"main.a99a6f4d.chunk.css","sourcesContent":["\r\n\r\n#productoTabla:hover {\r\n    background-color: rgba(225, 227, 255, 0.17);;\r\n}\r\n#productoTabla:active {\r\n    background-color:  #3f51b529;\r\n}"]}

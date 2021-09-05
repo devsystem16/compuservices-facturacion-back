@@ -17,10 +17,10 @@ class CreateClientesTable extends Migration
             $table->increments('id');
             $table->string('cedula', '100');
             $table->string('nombres');
-            $table->string('telefono')->nullable();
-            $table->string('direccion', '700')->nullable();
-            $table->string('correo')->nullable()->unique();
-            $table->string('observacion');
+            $table->string('telefono')->nullable()->default("");
+            $table->string('direccion', '700')->nullable()->default("");
+            $table->string('correo')->nullable()->default("");
+            $table->string('observacion')->nullable()->default("");
             $table->softDeletes();
             $table->timestamps();
         });

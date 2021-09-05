@@ -11,15 +11,17 @@ class Clientes extends Model
     use HasFactory;
     use SoftDeletes;
 
-    protected $table ='clientes';
+    protected $table = 'clientes';
     protected $dates = ['deleted_at'];
-    protected $fillable = ['cedula','nombres','telefono','direccion','correo'];
+    protected $fillable = ['cedula', 'nombres', 'telefono', 'direccion', 'correo', 'observacion'];
 
-    public function facturas(){
-        return $this->hasMany( Facturas::class, 'cliente_id', 'id');
+    public function facturas()
+    {
+        return $this->hasMany(Facturas::class, 'cliente_id', 'id');
     }
 
-    public function creditos(){
-        return $this->hasMany( Creditos::class, 'cliente_id', 'id');
+    public function creditos()
+    {
+        return $this->hasMany(Creditos::class, 'cliente_id', 'id');
     }
 }

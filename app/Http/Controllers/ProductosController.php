@@ -81,7 +81,16 @@ class ProductosController extends Controller
      */
     public function destroy($id)
     {
-        Productos::findOrFail($id)->delete();
+        try {
+            $response =  Productos::findOrFail($id)->delete();
+        } catch (\Exception $e) {
+            $response = 0;
+        }
+        if ($response == 1) {
+            return ["estado" => 200, "mensaje" => "Producto Eliminado."];
+        } else {
+            return ["estado" => 401, "mensaje" => "Ocurrió un error."];
+        }
     }
 
     public function listado($limite)
@@ -100,6 +109,21 @@ class ProductosController extends Controller
             ->take($limite)->get();
     }
 
+    public function listadoStock($limite)
+    {
+        return Productos::select(
+            'id',
+            'nombre',
+            'descripcion',
+            'precio_publico',
+            'precio_tecnico',
+            'precio_compra',
+            'precio_distribuidor',
+            'stock'
+        )
+            ->orderBy('updated_at', 'desc')
+            ->take($limite)->get();
+    }
     public function buscarProducto($texto = '')
     {
         return Productos::select(
