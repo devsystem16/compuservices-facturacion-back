@@ -5,6 +5,7 @@ use App\Http\Controllers\OrdenesController;
 use App\Http\Controllers\ProductosController;
 use App\Http\Controllers\CreditosController;
 use App\Http\Controllers\FacturasController;
+use App\Http\Controllers\PantallaposController;
 use App\Http\Controllers\TecnicoController;
 use App\Http\Controllers\UsuariosController;
 use Illuminate\Http\Request;
@@ -55,3 +56,6 @@ Route::post('/ordenes/abonos/nuevoabono',  [OrdenesController::class, 'abonar'])
 
 
 Route::post('/usuarios/acceso/login',  [UsuariosController::class, 'login']);
+
+
+Route::get('/pantallapos/acceso/obtener-acceso/{tipoUsuario}',  [PantallaposController::class, 'obtenerAccesos']);

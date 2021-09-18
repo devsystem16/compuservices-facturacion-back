@@ -103,6 +103,7 @@ class ProductosController extends Controller
             'precio_tecnico',
             'precio_compra',
             'precio_distribuidor',
+            'codigo_barra',
             'stock'
         )
             ->orderBy('updated_at', 'desc')
@@ -119,6 +120,7 @@ class ProductosController extends Controller
             'precio_tecnico',
             'precio_compra',
             'precio_distribuidor',
+            'codigo_barra',
             'stock'
         )
             ->orderBy('updated_at', 'desc')

@@ -159,6 +159,23 @@ class FacturasController extends Controller
         //     ->join('productos', 'productos.id', '=', 'detalles.producto_id')
         //     ->get();
 
+
+        $productosStock =  Productos::select(
+            'id',
+            'nombre',
+            'descripcion',
+            'precio_publico',
+            'precio_tecnico',
+            'precio_compra',
+            'precio_distribuidor',
+            'codigo_barra',
+            'stock'
+        )
+            ->orderBy('updated_at', 'desc')
+            ->where('stock', '<=', 2)
+            ->get();
+
+
         $clientes = DB::table('clientes as c')
             ->selectRaw('count(*) as cantidadclientes')
             ->first();
@@ -175,6 +192,7 @@ class FacturasController extends Controller
 
         $facturas = Facturas::where('fecha', '>=', $fecha_hoy)
             ->select(DB::raw('count(*) as NumeroFacturas'))
+            ->where('estado', '=', 'cerrada')
             ->first();
 
 
@@ -184,6 +202,6 @@ class FacturasController extends Controller
         }
 
 
-        return  ["estado" =>  200, "NumeroCreditos"  => $creditos->totalCreditos, "NumeroFacturas" =>  $facturas->NumeroFacturas, "clientes" =>  $clientes->cantidadclientes, "totalVendido" =>  $totalVentas, "desglose" =>  $reporteDiario];
+        return  ["estado" =>  200, "productosStockBajo"  => $productosStock, "NumeroCreditos"  => $creditos->totalCreditos, "NumeroFacturas" =>  $facturas->NumeroFacturas, "clientes" =>  $clientes->cantidadclientes, "totalVendido" =>  $totalVentas, "desglose" =>  $reporteDiario];
     }
 }

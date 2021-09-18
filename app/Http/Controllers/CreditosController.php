@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Creditos;
 use App\Models\DetalleCreditos;
+use App\Models\Facturas;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Carbon\Carbon;
@@ -62,6 +63,8 @@ class CreditosController extends Controller
 
 
         $credito = Creditos::findOrFail($request->credito_id);
+
+
         $detalles =  DetalleCreditos::where("credito_id",   $credito->id)->get();
         $totalPagado = 0;
         foreach ($detalles as $detalle) {
@@ -76,6 +79,10 @@ class CreditosController extends Controller
             $cambio = $valorMasAbono - $credito->total;
             $valorMasAbono = $credito->total;
             $saldo = 0;
+
+            $factura = Facturas::where('credito_id',  $credito->id)->first();
+            $factura->estado = "credito (PAGADO)";
+            $factura->save();
         }
 
         $credito->saldo = $saldo;

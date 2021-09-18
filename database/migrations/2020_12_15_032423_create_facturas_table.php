@@ -22,6 +22,8 @@ class CreateFacturasTable extends Migration
             $table->float('total');
             $table->string('observacion')->nullable()->default("");
             $table->string('estado');
+            $table->boolean('es_credito');
+            $table->integer('credito_id')->nullable();
             $table->timestamps();
             $table->foreign('cliente_id')->references('id')->on("clientes");
             $table->softDeletes();
