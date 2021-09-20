@@ -18,43 +18,43 @@ class UsuariosSeeder extends Seeder
         $tec   = new Usuarios();
         $tec->tipo_usuarios_id = 1;
         $tec->usuario = "naty";
-        $tec->nombres = "Nathy Rosero";
-        $tec->pass = "123";
+        $tec->nombres = "Naty Rosero";
+        $tec->pass = "4020";
         $tec->save();
 
         $tec   = new Usuarios();
         $tec->tipo_usuarios_id = 1;
         $tec->usuario = "freddy";
         $tec->nombres = "Freddy Cantos";
-        $tec->pass = "123";
+        $tec->pass = "2017";
         $tec->save();
 
         $tec   = new Usuarios();
         $tec->tipo_usuarios_id = 3;
-        $tec->usuario = "angel";
-        $tec->nombres = "Angel";
+        $tec->usuario = "1250";
+        $tec->nombres = "Angel Mendoza";
         $tec->pass = "123";
         $tec->save();
 
         $tec   = new Usuarios();
         $tec->tipo_usuarios_id = 2;
         $tec->usuario = "ricardo";
-        $tec->nombres = "RICARDO";
-        $tec->pass = "123";
+        $tec->nombres = "Ricardo Cantos";
+        $tec->pass = "2021";
         $tec->save();
 
         $tec   = new Usuarios();
         $tec->tipo_usuarios_id = 2;
         $tec->usuario = "jorge";
-        $tec->nombres = "JORGE";
-        $tec->pass = "123";
+        $tec->nombres = "Jorge Figuera";
+        $tec->pass = "1106";
         $tec->save();
 
         $tec   = new Usuarios();
         $tec->tipo_usuarios_id = 2;
         $tec->usuario = "alejandro";
-        $tec->nombres = "ALEJANDRO";
-        $tec->pass = "123";
+        $tec->nombres = "Alejandro Ruiz";
+        $tec->pass = "1002";
         $tec->save();
     }
 }
