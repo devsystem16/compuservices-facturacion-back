@@ -31,9 +31,9 @@ class UsuariosSeeder extends Seeder
 
         $tec   = new Usuarios();
         $tec->tipo_usuarios_id = 3;
-        $tec->usuario = "1250";
+        $tec->usuario = "angel";
         $tec->nombres = "Angel Mendoza";
-        $tec->pass = "123";
+        $tec->pass = "1250";
         $tec->save();
 
         $tec   = new Usuarios();
