@@ -13,5 +13,9 @@ class Ordenes extends Model
 
     protected $table = 'ordenes';
     protected $dates = ['deleted_at'];
-    protected $fillable = ['cliente_id', 'usuario_id', 'fecha', 'equipo', 'marca', 'modelo', 'serie', 'falla', 'trabajo', 'total', 'saldo', 'abono', 'observacion', 'camara', 'teclado', 'microfono', 'parlantes', 'estado', 'estadoOrden'];
+    protected $fillable = [
+        'cliente_id', 'usuario_id', 'fecha', 'equipo', 'marca', 'modelo',
+        'serie', 'falla', 'trabajo', 'total', 'saldo', 'abono', 'observacion', 'camara', 'teclado',
+        'microfono', 'parlantes', 'estado', 'estadoOrden', 'last_user_update', 'user_update_work'
+    ];
 }

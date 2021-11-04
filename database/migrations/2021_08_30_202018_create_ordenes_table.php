@@ -35,6 +35,11 @@ class CreateOrdenesTable extends Migration
             $table->boolean('parlantes');
             $table->boolean('estado')->default(true);
             $table->string('estadoOrden', '3000')->nullable()->default("");
+
+            $table->string('last_user_update', '700')->nullable()->default("");
+            $table->string('user_update_work', '700')->nullable()->default("");
+
+
             $table->timestamps();
 
             $table->foreign('cliente_id')->references('id')->on("clientes");

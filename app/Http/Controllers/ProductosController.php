@@ -106,7 +106,7 @@ class ProductosController extends Controller
             'codigo_barra',
             'stock'
         )
-            ->orderBy('updated_at', 'desc')
+            ->orderBy('created_at', 'desc')
             ->take($limite)->get();
     }
 
@@ -123,7 +123,7 @@ class ProductosController extends Controller
             'codigo_barra',
             'stock'
         )
-            ->orderBy('updated_at', 'desc')
+            ->orderBy('created_at', 'desc')
             ->take($limite)->get();
     }
     public function buscarProducto($texto = '')

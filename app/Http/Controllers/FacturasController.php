@@ -178,6 +178,7 @@ class FacturasController extends Controller
 
         $clientes = DB::table('clientes as c')
             ->selectRaw('count(*) as cantidadclientes')
+            ->where('deleted_at', '=',  null)
             ->first();
 
 

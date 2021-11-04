@@ -103,7 +103,7 @@ class ClienteController extends Controller
     public function listado($limite)
     {
         return Clientes::select('id', 'cedula', 'nombres', 'telefono', 'direccion', 'correo', 'observacion')
-            ->orderBy('updated_at', 'desc')
+            ->orderBy('created_at', 'desc')
             ->take($limite)
             ->get();
     }

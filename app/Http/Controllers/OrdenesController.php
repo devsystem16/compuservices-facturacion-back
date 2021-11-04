@@ -6,6 +6,7 @@ use App\Models\AbonoOrdenes;
 use App\Models\Ordenes;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class OrdenesController extends Controller
 {
@@ -18,10 +19,12 @@ class OrdenesController extends Controller
     {
 
 
-
-        $ordenes = Ordenes::select('ordenes.*', 'clientes.nombres as cliente')
+        $ordenes = Ordenes::select('ordenes.*', 'clientes.nombres as cliente', 'usu.nombres as update_work',  'usu1.nombres as last_user')
             ->join('clientes', 'ordenes.cliente_id', 'clientes.id')
-            ->orderBy('ordenes.updated_at', 'desc')
+            ->join('usuarios as usu', 'ordenes.user_update_work', 'usu.id')
+            ->join('usuarios as usu1', 'ordenes.last_user_update', 'usu1.id')
+            ->orderBy('ordenes.fecha', 'desc')
+            ->orderBy('ordenes.id', 'desc')
             ->where('ordenes.estado', '=', 1)
             ->get();
 
