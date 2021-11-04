@@ -53,7 +53,7 @@ class ClienteController extends Controller
      */
     public function show($id)
     {
-        return Clientes::find($id);
+        return Clientes::withTrashed()->where('id', '=', $id)->first();
     }
 
     /**
