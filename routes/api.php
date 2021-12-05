@@ -46,6 +46,9 @@ Route::resource('creditos', CreditosController::class);
 Route::get('/reporte/ventas',  [FacturasController::class, 'reporteDiario']);
 Route::get('/reporte/historicofacturas',  [FacturasController::class, 'historiofacturas']);
 
+Route::post('/reporte/historicofacturas-filter',  [FacturasController::class, 'historiofacturasFilter']);
+Route::post('/facturas/anulacion/nota-credito',  [FacturasController::class, 'anularFactura']);
+
 
 Route::post('/creditos/abonar',  [CreditosController::class, 'abonar']);
 Route::get('/creditos/lista/listado',  [CreditosController::class, 'ListadoCreditos']);
@@ -53,6 +56,7 @@ Route::get('/creditos/lista/listado',  [CreditosController::class, 'ListadoCredi
 
 Route::post('/ordenes/abonos/nuevoabono',  [OrdenesController::class, 'abonar']);
 
+Route::post('/ordenes/total/actualizar',  [OrdenesController::class, 'actualizarTotal']);
 
 
 Route::post('/usuarios/acceso/login',  [UsuariosController::class, 'login']);

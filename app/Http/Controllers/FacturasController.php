@@ -145,7 +145,80 @@ class FacturasController extends Controller
         return   $reporte;
     }
 
+    public function anularFactura(Request $request)
+    {
+        $factura = Facturas::findOrFail($request->idFactura);
 
+
+        if ($factura->estado  == "Anulada") {
+            return    ["codigo" => 203, "mensaje"   => "Factura ya se encuentra anulada"];
+        }
+
+        if ($factura->estado  == "credito") {
+            return    ["codigo" => 203, "mensaje"   => "No se permite anular un Credito"];
+        }
+
+        if ($factura->estado  == "credito (PAGADO)") {
+            return    ["codigo" => 203, "mensaje"   => "No se permite anular un Credito Pagado"];
+        }
+
+        $factura->estado = "Anulada";
+        $factura->save();
+
+
+
+        $detalles =  Detalles::where("factura_id",  $factura->id)->get();
+
+        foreach ($detalles as $detalle) {
+            $producto =  Productos::find($detalle->producto_id);
+            $producto->stock =  $producto->stock  + $detalle->cantidad;
+            $producto->save();
+        }
+
+
+        return    ["codigo" => 200, "mensaje"   => "Factura Anulada correctamente."];
+    }
+
+    public function historiofacturasFilter(Request $request)
+    {
+
+
+
+        $reporte = [];
+        $facturas =  Facturas::select(
+            'facturas.id',
+            'clientes.nombres as cliente',
+            'facturas.fecha',
+            'facturas.subtotal',
+            'facturas.iva',
+            'facturas.total',
+            'facturas.observacion',
+            'facturas.estado'
+        )
+            ->join('clientes', 'clientes.id', 'facturas.cliente_id')
+            ->orderBy('facturas.created_at', 'desc')
+
+            ->where('clientes.nombres', 'LIKE', '%' . $request->filter . '%')
+            ->orWhere('facturas.id', 'LIKE', '%' . $request->filter . '%')
+            ->get();
+
+        foreach ($facturas as $factura) {
+            $detalle = Detalles::select(
+                'detalles.id',
+                'productos.nombre as producto',
+                'detalles.cantidad',
+                'detalles.subtotal',
+                'detalles.precio_tipo'
+            )
+                ->join('productos', 'productos.id', 'detalles.producto_id')
+                ->where('factura_id', $factura->id)->get();
+            $factura->detalles =  $detalle;
+            array_push($reporte, [
+                'factura' => $factura
+            ]);
+        }
+        return   $reporte;
+    }
 
     public function reporteDiario()
     {

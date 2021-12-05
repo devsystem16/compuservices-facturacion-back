@@ -1,4 +1,5 @@
-CREATE DEFINER=`grupoc25_adminworkbench`@`157.100.91.240` PROCEDURE `reporteDiario`()
+CREATE DEFINER=`root`@`localhost` PROCEDURE `reporteDiario`()
+ CREATE DEFINER=`grupoc25_adminworkbench`@`157.100.91.240` PROCEDURE `reporteDiario`()
 BEGIN
 SELECT 
 		   uuid() id , tabla.*    from (

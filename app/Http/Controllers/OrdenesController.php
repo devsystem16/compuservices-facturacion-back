@@ -158,4 +158,15 @@ class OrdenesController extends Controller
 
         return   ["totalCredito"  =>  $orden->total, "totalPagado" => $valorMasAbono, "saldo" => $saldo, "cambio" =>  $cambio];
     }
+
+    public function actualizarTotal(Request $request)
+    {
+        $orden = Ordenes::findOrFail($request->orden_id);
+        $orden->total = $request->total;
+        $abono = $orden->abono;
+        $orden->saldo =   $orden->total  - $abono;
+        $orden->save();
+
+        return    ["codigo" => 200, "mensaje"   => "Total actualizado", "orden"  =>  $orden];
+    }
 }
