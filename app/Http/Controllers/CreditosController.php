@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Creditos;
+
 use App\Models\DetalleCreditos;
+use App\Models\Detalles;
 use App\Models\Facturas;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
@@ -107,8 +109,6 @@ class CreditosController extends Controller
     public function ListadoCreditos()
     {
 
-
-
         $creditos = Creditos::select('creditos.id as id',  'creditos.cliente_id', 'creditos.fecha', 'creditos.detalle', 'creditos.saldo', 'creditos.total', 'clientes.nombres as cliente', 'clientes.telefono as telefono')
             ->join('clientes', 'creditos.cliente_id', 'clientes.id')
             ->orderBy('creditos.updated_at', 'desc')
@@ -122,6 +122,52 @@ class CreditosController extends Controller
         foreach ($creditos as $credito) {
 
             $detalles =   DetalleCreditos::where('credito_id', $credito->id)->get();
+            $factura =  Facturas::select(
+                'facturas.id',
+                'clientes.nombres as cliente',
+                'facturas.fecha',
+                'facturas.subtotal',
+                'facturas.iva',
+                'facturas.total',
+                'facturas.observacion',
+                'facturas.estado'
+            )
+                ->join('clientes', 'clientes.id', 'facturas.cliente_id')
+                ->orderBy('facturas.created_at', 'desc')
+                ->where('facturas.credito_id', '=', $credito->id)
+                ->get();
+
+
+            $pagos = DetalleCreditos::select(
+                'detalle_creditos.id',
+                'detalle_creditos.fecha',
+                'detalle_creditos.abono',
+                'detalle_creditos.comentario'
+            )
+                ->join('creditos', 'creditos.id', 'detalle_creditos.credito_id')
+                ->where('creditos.id', '=', $credito->id)
+                ->get();
+
+
+
+            $detalle = [];
+
+            foreach ($factura as $fac) {
+                $detalle = Detalles::select(
+                    'detalles.id',
+                    'productos.nombre as producto',
+                    'detalles.cantidad',
+                    'detalles.subtotal',
+                    'detalles.precio_tipo'
+                )
+                    ->join('productos', 'productos.id', 'detalles.producto_id')
+                    ->where('factura_id', $fac->id)->get();
+                $fac->detalles =  $detalle;
+            }
+
+
+
+
             $abonado = 0;
             foreach ($detalles as $detalle) {
                 $abonado =   $abonado + $detalle->abono;
@@ -134,7 +180,10 @@ class CreditosController extends Controller
                 "detalle" => $credito->detalle,
                 "saldo" => $credito->saldo,
                 "total" => $credito->total,
-                "abono" => $abonado
+                "abono" => $abonado,
+                "pagos" => $pagos,
+                "factura" => $factura[0]
+
             ]);
         }
         return   $collection;
