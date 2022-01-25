@@ -220,6 +220,9 @@ class FacturasController extends Controller
         return   $reporte;
     }
 
+
+
+    
     public function reporteDiario()
     {
         $reporteDiario =  DB::select(' call reporteDiario();');

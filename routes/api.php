@@ -8,6 +8,7 @@ use App\Http\Controllers\FacturasController;
 use App\Http\Controllers\PantallaposController;
 use App\Http\Controllers\TecnicoController;
 use App\Http\Controllers\UsuariosController;
+use App\Http\Controllers\ReporteController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -63,3 +64,9 @@ Route::post('/usuarios/acceso/login',  [UsuariosController::class, 'login']);
 
 
 Route::get('/pantallapos/acceso/obtener-acceso/{tipoUsuario}',  [PantallaposController::class, 'obtenerAccesos']);
+
+
+
+
+Route::post('/reportes/ventas-diarias',  [ReporteController::class, 'ventasDiarias']);
+Route::post('/reportes/ingresos-empleado',  [ReporteController::class, 'ingresosXempleado']);
