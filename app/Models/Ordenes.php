@@ -16,6 +16,6 @@ class Ordenes extends Model
     protected $fillable = [
         'cliente_id', 'usuario_id', 'fecha', 'equipo', 'marca', 'modelo',
         'serie', 'falla', 'trabajo', 'total', 'saldo', 'abono', 'observacion', 'camara', 'teclado',
-        'microfono', 'parlantes', 'estado', 'estadoOrden', 'last_user_update', 'user_update_work'
+        'microfono', 'parlantes', 'estado', 'estadoOrden', 'last_user_update', 'user_update_work', 'factura_relacionada'
     ];
 }
