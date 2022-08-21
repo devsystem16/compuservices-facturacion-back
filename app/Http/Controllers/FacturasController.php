@@ -145,22 +145,82 @@ class FacturasController extends Controller
         return   $reporte;
     }
 
+
+    public function reimpresion($id)
+    {
+        $reporte = [];
+
+        $facturas =  Facturas::select(
+            'facturas.id',
+            'facturas.cliente_id',
+            'facturas.fecha',
+            'facturas.subtotal',
+            'facturas.iva',
+            'facturas.total',
+            'facturas.observacion',
+            'facturas.es_credito',
+            'facturas.fecha',
+            'facturas.estado'
+        )
+            ->where('facturas.id', '=', $id)
+            ->orderBy('facturas.created_at', 'desc')
+            ->first();
+
+        $cliente =  Clientes::select('cedula', 'nombres', 'telefono', 'direccion')
+            ->where('id', $facturas->cliente_id)->first();
+
+
+        $totales =  ["subtotal" => $facturas->subtotal, "iva"  => $facturas->iva, "total" =>  $facturas->total, "observaciones" =>  $facturas->observacion];
+
+        $detalle = Detalles::select(
+            'detalles.id',
+            'productos.nombre as producto',
+            'detalles.cantidad',
+            'detalles.subtotal as total',
+            'detalles.precio_tipo',
+            'productos.precio_publico',
+            'productos.precio_tecnico',
+            'productos.precio_distribuidor'
+        )
+            ->join('productos', 'productos.id', 'detalles.producto_id')
+            ->where('factura_id', $facturas->id)->get();
+
+        $facturas->detalles =  $detalle;
+        $facturas->cliente =  $cliente;
+        $facturas->totales =    $totales;
+        array_push($reporte, [
+            'factura' => $facturas
+        ]);
+
+
+
+        return $reporte[0];
+    }
+
+
     public function anularFactura(Request $request)
     {
         $factura = Facturas::findOrFail($request->idFactura);
+
 
 
         if ($factura->estado  == "Anulada") {
             return    ["codigo" => 203, "mensaje"   => "Factura ya se encuentra anulada"];
         }
 
-        if ($factura->estado  == "credito") {
-            return    ["codigo" => 203, "mensaje"   => "No se permite anular un Credito"];
+        if ($factura->es_credito == 1) {
+            // $credito = Creditos::findOrFail($factura->credito_id);
+            Creditos::findOrFail($factura->credito_id)->delete();
         }
 
-        if ($factura->estado  == "credito (PAGADO)") {
-            return    ["codigo" => 203, "mensaje"   => "No se permite anular un Credito Pagado"];
-        }
+
+        // if ($factura->estado  == "credito") {
+        //     return    ["codigo" => 203, "mensaje"   => "No se permite anular un Credito"];
+        // }
+
+        // if ($factura->estado  == "credito (PAGADO)") {
+        //     return    ["codigo" => 203, "mensaje"   => "No se permite anular un Credito Pagado"];
+        // }
 
         $factura->estado = "Anulada";
         $factura->save();
@@ -222,7 +282,7 @@ class FacturasController extends Controller
 
 
 
-    
+
     public function reporteDiario()
     {
         $reporteDiario =  DB::select(' call reporteDiario();');

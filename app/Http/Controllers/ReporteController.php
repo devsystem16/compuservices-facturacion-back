@@ -209,6 +209,7 @@ class ReporteController extends Controller
             ->join('detalle_creditos', 'detalle_creditos.credito_id', 'creditos.id')
             ->join('clientes', 'clientes.id', 'creditos.cliente_id')
             ->whereBetween('detalle_creditos.fecha', [$request->fecha_desde, $request->fecha_hasta])
+
             ->groupBy('detalle_creditos.credito_id')
             ->get();
 

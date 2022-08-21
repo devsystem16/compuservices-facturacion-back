@@ -55,6 +55,9 @@ Route::post('/creditos/abonar',  [CreditosController::class, 'abonar']);
 Route::get('/creditos/lista/listado',  [CreditosController::class, 'ListadoCreditos']);
 
 
+Route::get('/facturas/impresion/reimpresion/{id}',  [FacturasController::class, 'reimpresion']);
+
+
 Route::post('/ordenes/abonos/nuevoabono',  [OrdenesController::class, 'abonar']);
 
 Route::post('/ordenes/total/actualizar',  [OrdenesController::class, 'actualizarTotal']);

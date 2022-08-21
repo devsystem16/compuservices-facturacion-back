@@ -113,6 +113,7 @@ class CreditosController extends Controller
             ->join('clientes', 'creditos.cliente_id', 'clientes.id')
             ->orderBy('creditos.updated_at', 'desc')
             ->where('creditos.saldo', '>', 0)
+            ->whereNull('creditos.deleted_at')
             ->orderBy('creditos.fecha', 'desc')
             ->get();
 
