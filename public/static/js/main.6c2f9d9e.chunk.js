@@ -8225,7 +8225,7 @@
                         e.children
                     );
                 },
-                vr = t.p + "static/media/LogoIngreso.1cc50be9.PNG",
+                vr = t.p + "public/static/media/LogoIngreso.1cc50be9.PNG",
                 xr = r.a.forwardRef(function (e, a) {
                     var t = e.datosImpresion,
                         n = t.orden,
