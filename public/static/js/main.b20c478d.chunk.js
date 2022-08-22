@@ -268,12 +268,9 @@
                 O = t.n(x),
                 j = t(10),
                 C = t(63),
-                y = t
-                    .n(C)
-                    .a.create({
-                        baseURL:
-                            "https://facturacion-binariosdrink.herokuapp.com/",
-                    }),
+                y = t.n(C).a.create({
+                    baseURL: "https://facturacion-binariosdrink.herokuapp.com/",
+                }),
                 w = Object(n.createContext)(),
                 S = "api/usuarios/acceso/login",
                 k = "api/pantallapos/acceso/obtener-acceso",
@@ -630,7 +627,7 @@
                     return r.a.createElement(
                         "img",
                         Object.assign(
-                            { alt: "Logo", src: "/static/logo.svg" },
+                            { alt: "Logo", src: "public/static/logo.svg" },
                             e
                         )
                     );
