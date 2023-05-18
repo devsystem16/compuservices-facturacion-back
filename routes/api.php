@@ -5,6 +5,7 @@ use App\Http\Controllers\OrdenesController;
 use App\Http\Controllers\ProductosController;
 use App\Http\Controllers\CreditosController;
 use App\Http\Controllers\FacturasController;
+use App\Http\Controllers\FormaPagoController;
 use App\Http\Controllers\PantallaposController;
 use App\Http\Controllers\TecnicoController;
 use App\Http\Controllers\UsuariosController;
@@ -39,13 +40,13 @@ Route::get('/productos/buscarProducto/{texto?}',  [ProductosController::class, '
 
 Route::resource('productos', ProductosController::class);
 
-
+Route::resource('forma-pagos', FormaPagoController::class);
 Route::resource('tecnicos', TecnicoController::class);
 Route::resource('facturas', FacturasController::class);
 Route::resource('creditos', CreditosController::class);
 
 Route::get('/reporte/ventas',  [FacturasController::class, 'reporteDiario']);
-Route::get('/reporte/historicofacturas',  [FacturasController::class, 'historiofacturas']);
+Route::get('/reporte/historicofacturas/{limite}',  [FacturasController::class, 'historiofacturas']);
 
 Route::post('/reporte/historicofacturas-filter',  [FacturasController::class, 'historiofacturasFilter']);
 Route::post('/facturas/anulacion/nota-credito',  [FacturasController::class, 'anularFactura']);
@@ -53,7 +54,7 @@ Route::post('/facturas/anulacion/nota-credito',  [FacturasController::class, 'an
 
 Route::post('/creditos/abonar',  [CreditosController::class, 'abonar']);
 Route::get('/creditos/lista/listado',  [CreditosController::class, 'ListadoCreditos']);
-
+Route::post('/creditos/eliminar/{idCredito}',  [CreditosController::class, 'eliminarCredito']);
 
 Route::get('/facturas/impresion/reimpresion/{id}',  [FacturasController::class, 'reimpresion']);
 
@@ -73,3 +74,4 @@ Route::get('/pantallapos/acceso/obtener-acceso/{tipoUsuario}',  [PantallaposCont
 
 Route::post('/reportes/ventas-diarias',  [ReporteController::class, 'ventasDiarias']);
 Route::post('/reportes/ingresos-empleado',  [ReporteController::class, 'ingresosXempleado']);
+Route::get('/reportes/ventas-diarias/forma-pago',  [ReporteController::class, 'totalPorFormasPago']);

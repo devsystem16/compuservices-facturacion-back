@@ -95,10 +95,11 @@ class ProductosController extends Controller
 
     public function listado($limite)
     {
+
+
         return Productos::select(
             'id',
             'nombre',
-            'descripcion',
             'precio_publico',
             'precio_tecnico',
             'precio_compra',
@@ -106,8 +107,26 @@ class ProductosController extends Controller
             'codigo_barra',
             'stock'
         )
+            ->where('stock', '>', 0)
             ->orderBy('created_at', 'desc')
-            ->take($limite)->get();
+            ->take($limite)
+            ->get();
+
+
+
+        // return Productos::select(
+        //     'id',
+        //     'nombre',
+        //     'descripcion',
+        //     'precio_publico',
+        //     'precio_tecnico',
+        //     'precio_compra',
+        //     'precio_distribuidor',
+        //     'codigo_barra',
+        //     'stock'
+        // )
+        //     ->orderBy('created_at', 'desc')
+        //     ->take($limite)->get();
     }
 
     public function listadoStock($limite)

@@ -7,9 +7,12 @@ use App\Models\Creditos;
 use App\Models\DetalleCreditos;
 use App\Models\Detalles;
 use App\Models\Facturas;
+use App\Models\Productos;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
+use Exception;
 
 class CreditosController extends Controller
 {
@@ -41,25 +44,82 @@ class CreditosController extends Controller
      */
     public function store(Request $request)
     {
+        try {
+            DB::beginTransaction();
+            $creditos = Creditos::create($request->cabecera);
 
-        $creditos = Creditos::create($request->cabecera);
+            foreach ($request->detalle as $detalle) {
+                DetalleCreditos::create(
+                    [
+                        'credito_id' => $creditos->id,
+                        'abono' => $detalle["abono"],
+                        'fecha' => $detalle["fecha"],
+                        'comentario' =>  $detalle["comentario"]
+                    ]
+                );
+            }
 
+            // En caso de tener formas de pago.
+            foreach ($request->formasPago as $formasPago) {
+                if ($formasPago["valor"] > 0) {
+                    DetalleCreditos::create(
+                        [
+                            'credito_id' => $creditos->id,
+                            'abono' => $formasPago["valor"],
+                            'fecha' =>  now()->format('Y-m-d'),
+                            'forma_pago_id' => $formasPago["id"],
+                            'comentario' =>   "Abono-inmediato"
+                        ]
+                    );
+                }
+            }
 
-        foreach ($request->detalle as $detalle) {
-            DetalleCreditos::create(
-                [
-                    'credito_id' => $creditos->id,
-                    'abono' => $detalle["abono"],
-                    'fecha' => $detalle["fecha"],
-                    'comentario' =>  $detalle["comentario"]
-                ]
-            );
+            DB::commit();
+            return  ["estado" =>  200,  "credito" =>     $creditos];
+        } catch (Exception $e) {
+            DB::rollBack();
+            return response()->json(["estado" =>  400,  "credito" =>     []], 200);
         }
-        return  ["estado" =>  200,  "credito" =>     $creditos];
-        //['credito_id','abono','fecha','comentario' ]
     }
 
+    public function eliminarCredito($idCredito)
+    {
 
+        try {
+            DB::beginTransaction();
+
+            $factura = Facturas::where('credito_id', $idCredito)->first();
+            $credito = Creditos::where('id', $idCredito)->first();
+            $factura->estado = "Anulada";
+            $factura->save();
+
+            // ELiminar detalles de creditos (Abonos de pagos)
+            $detallesCreditos =  DetalleCreditos::where("credito_id",  $idCredito)->get();
+            foreach ($detallesCreditos as $detalleC) {
+                $detalleC->delete();
+            }
+
+            // Devolver Stock en Productos.
+            $detalles =  Detalles::where("factura_id",  $factura->id)->get();
+            foreach ($detalles as $detalle) {
+                $producto =  Productos::find($detalle->producto_id);
+                $producto->stock =  $producto->stock  + $detalle->cantidad;
+                $producto->save();
+            }
+
+            // anular Factura. 
+            $factura->estado = "Anulada";
+            $factura->save();
+            // ELiminar Credito
+            $credito->delete();
+
+            DB::commit();
+            return response()->json(["codigo" => 200, "Message"   => "Crédito Anulado correctamente."],  200);
+        } catch (Exception $e) {
+            DB::rollBack();
+            return response()->json(["codigo" => 400, "Message" => "Error al eliminar"], 400);
+        }
+    }
     public function abonar(Request $request)
     {
 
@@ -99,6 +159,7 @@ class CreditosController extends Controller
                 'credito_id' => $credito->id,
                 'abono' => $request->abono,
                 'fecha' => $fecha_hoy,
+                'forma_pago_id' => $request->forma_pago_id,
                 'comentario' =>  "Abono"
             ]
         );
@@ -109,11 +170,20 @@ class CreditosController extends Controller
     public function ListadoCreditos()
     {
 
-        $creditos = Creditos::select('creditos.id as id',  'creditos.cliente_id', 'creditos.fecha', 'creditos.detalle', 'creditos.saldo', 'creditos.total', 'clientes.nombres as cliente', 'clientes.telefono as telefono')
+        $creditos = Creditos::select(
+            'creditos.id as id',
+            'creditos.cliente_id',
+            'creditos.fecha',
+            'creditos.detalle',
+            'creditos.saldo',
+            'creditos.total',
+            'clientes.nombres as cliente',
+            'clientes.telefono as telefono'
+        )
             ->join('clientes', 'creditos.cliente_id', 'clientes.id')
-            ->orderBy('creditos.updated_at', 'desc')
             ->where('creditos.saldo', '>', 0)
             ->whereNull('creditos.deleted_at')
+            ->orderBy('creditos.updated_at', 'desc')
             ->orderBy('creditos.fecha', 'desc')
             ->get();
 
@@ -143,9 +213,11 @@ class CreditosController extends Controller
                 'detalle_creditos.id',
                 'detalle_creditos.fecha',
                 'detalle_creditos.abono',
-                'detalle_creditos.comentario'
+                'detalle_creditos.comentario',
+                'forma_pagos.label as forma_pago'
             )
                 ->join('creditos', 'creditos.id', 'detalle_creditos.credito_id')
+                ->Leftjoin('forma_pagos', 'forma_pagos.id', 'detalle_creditos.forma_pago_id')
                 ->where('creditos.id', '=', $credito->id)
                 ->get();
 
@@ -183,7 +255,7 @@ class CreditosController extends Controller
                 "total" => $credito->total,
                 "abono" => $abonado,
                 "pagos" => $pagos,
-                "factura" => $factura[0]
+                "factura" => isset($factura[0]) ? $factura[0] : null
 
             ]);
         }

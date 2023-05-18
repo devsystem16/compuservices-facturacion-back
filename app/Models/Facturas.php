@@ -19,4 +19,9 @@ class Facturas extends Model
     {
         return $this->hasMany(Detalles::class, 'factura_id', 'id');
     }
+
+    public function formaPagoFactura()
+    {
+        return $this->hasMany(FormaPagoFactura::class, 'factura_id', 'id');
+    }
 }

@@ -6,11 +6,13 @@ use App\Models\Clientes;
 use App\Models\Facturas;
 use App\Models\Detalles;
 use App\Models\Creditos;
+use App\Models\FormaPagoFactura;
 use App\Models\Productos;
 use Illuminate\Http\Request;
-use DB;
+
 use Carbon\Carbon;
-use Illuminate\Support\Facades\DB as FacadesDB;
+use Illuminate\Support\Facades\DB;
+use Exception;
 
 class FacturasController extends Controller
 {
@@ -43,26 +45,54 @@ class FacturasController extends Controller
     public function store(Request $request)
     {
 
-        $facturas = Facturas::create($request->cabecera);
+        // $suma = 0;
+        // foreach ($request->formasPago as $formasPago) {
+        //     $suma +=   $formasPago["valor"];
+        // }
+        // if ($suma != 0)
+        //     if ($request->cabecera["total"]  != $suma)
+        //         return response()->json(["estado" => 400, "Message" => "El valor total de la factura $(" . $request->cabecera["total"] . ")  NO cuadra con las formas de pago $ (" . $suma . ") "], 200);
 
-        foreach ($request->detalle as $detalle) {
 
-            $producto = Productos::find($detalle["producto_id"]);
-            $producto->stock = $producto->stock - $detalle["cantidad"];
-            $producto->save();
+        try {
+            DB::beginTransaction();
+            $facturas = Facturas::create($request->cabecera);
 
-            Detalles::create(
-                [
-                    'factura_id' => $facturas->id,
-                    'producto_id' => $detalle["producto_id"],
-                    'cantidad' => $detalle["cantidad"],
-                    'subtotal' =>  $detalle["subtotal"],
-                    'precio_tipo' =>   $detalle["precio_tipo"]
-                ]
-            );
+            foreach ($request->detalle as $detalle) {
+
+                $producto = Productos::find($detalle["producto_id"]);
+                $producto->stock = $producto->stock - $detalle["cantidad"];
+                $producto->save();
+
+                Detalles::create(
+                    [
+                        'factura_id' => $facturas->id,
+                        'producto_id' => $detalle["producto_id"],
+                        'cantidad' => $detalle["cantidad"],
+                        'subtotal' =>  $detalle["subtotal"],
+                        'precio_tipo' =>   $detalle["precio_tipo"]
+                    ]
+                );
+            }
+
+            foreach ($request->formasPago as $formasPago) {
+                if ($formasPago["valor"] > 0) {
+                    FormaPagoFactura::create(
+                        [
+                            'factura_id' =>   $facturas->id,
+                            'forma_pago_id' => $formasPago["id"],
+                            'valor' => $formasPago["valor"],
+                            'observacion' =>  ""
+                        ]
+                    );
+                }
+            }
+            DB::commit();
+            return  ["estado" =>  200,  "factura" => $facturas, "Message" => "Factura Guardada"];
+        } catch (Exception $e) {
+            DB::rollBack();
+            return response()->json(["estado" => 400, "Message" => "Ocurrió un error en el servidor.", "factura" =>  []], 200);
         }
-
-        return  ["estado" =>  200,  "factura" => $facturas];
     }
     /**
      * Display the specified resource.
@@ -109,40 +139,74 @@ class FacturasController extends Controller
         Facturas::findOrFail($id)->delete();
     }
 
-    public function historiofacturas(Request $request)
+    public function historiofacturas(Request $request, $limite)
     {
+        $fechaHace10Meses = \Carbon\Carbon::now()->subMonths(3);
 
-        $reporte = [];
-        $facturas =  Facturas::select(
-            'facturas.id',
-            'clientes.nombres as cliente',
-            'facturas.fecha',
-            'facturas.subtotal',
-            'facturas.iva',
-            'facturas.total',
-            'facturas.observacion',
-            'facturas.estado'
-        )
-            ->join('clientes', 'clientes.id', 'facturas.cliente_id')
-            ->orderBy('facturas.created_at', 'desc')
-            ->get();;
-
-        foreach ($facturas as $factura) {
-            $detalle = Detalles::select(
+        $facturas = Facturas::with(['detalles' => function ($query) {
+            $query->select(
                 'detalles.id',
                 'productos.nombre as producto',
                 'detalles.cantidad',
                 'detalles.subtotal',
                 'detalles.precio_tipo'
-            )
-                ->join('productos', 'productos.id', 'detalles.producto_id')
-                ->where('factura_id', $factura->id)->get();
-            $factura->detalles =  $detalle;
-            array_push($reporte, [
-                'factura' => $factura
+            )->join('productos', 'productos.id', 'detalles.producto_id');
+        }])
+            ->join('clientes', 'clientes.id', 'facturas.cliente_id')
+            // ->whereBetween('facturas.fecha', [$fechaHace10Meses, \Carbon\Carbon::now()])
+            ->orderBy('facturas.created_at', 'desc')
+            ->take($limite)
+            ->get([
+                'facturas.id',
+                'clientes.nombres as cliente',
+                'facturas.fecha',
+                'facturas.subtotal',
+                'facturas.iva',
+                'facturas.total',
+                'facturas.observacion',
+                'facturas.estado'
             ]);
-        }
-        return   $reporte;
+
+        $reporte = $facturas->map(function ($factura) {
+            return [
+                'factura' => $factura
+            ];
+        })->all();
+        return    $reporte;
+
+
+
+        // $reporte = [];
+        // $facturas =  Facturas::select(
+        //     'facturas.id',
+        //     'clientes.nombres as cliente',
+        //     'facturas.fecha',
+        //     'facturas.subtotal',
+        //     'facturas.iva',
+        //     'facturas.total',
+        //     'facturas.observacion',
+        //     'facturas.estado'
+        // )
+        //     ->join('clientes', 'clientes.id', 'facturas.cliente_id')
+        //     ->orderBy('facturas.created_at', 'desc')
+        //     ->get();;
+
+        // foreach ($facturas as $factura) {
+        //     $detalle = Detalles::select(
+        //         'detalles.id',
+        //         'productos.nombre as producto',
+        //         'detalles.cantidad',
+        //         'detalles.subtotal',
+        //         'detalles.precio_tipo'
+        //     )
+        //         ->join('productos', 'productos.id', 'detalles.producto_id')
+        //         ->where('factura_id', $factura->id)->get();
+        //     $factura->detalles =  $detalle;
+        //     array_push($reporte, [
+        //         'factura' => $factura
+        //     ]);
+        // }
+        // return   $reporte;
     }
 
 
@@ -243,9 +307,7 @@ class FacturasController extends Controller
     {
 
 
-
-        $reporte = [];
-        $facturas =  Facturas::select(
+        $facturas = Facturas::select(
             'facturas.id',
             'clientes.nombres as cliente',
             'facturas.fecha',
@@ -255,29 +317,59 @@ class FacturasController extends Controller
             'facturas.observacion',
             'facturas.estado'
         )
-            ->join('clientes', 'clientes.id', 'facturas.cliente_id')
+            ->join('clientes', 'clientes.id', '=', 'facturas.cliente_id')
+            ->where(function ($query) use ($request) {
+                $query->where('clientes.nombres', 'LIKE', '%' . $request->filter . '%')
+                    ->orWhere('facturas.id', 'LIKE', '%' . $request->filter . '%');
+            })
             ->orderBy('facturas.created_at', 'desc')
-
-            ->where('clientes.nombres', 'LIKE', '%' . $request->filter . '%')
-            ->orWhere('facturas.id', 'LIKE', '%' . $request->filter . '%')
+            ->take($request->limite)
             ->get();
 
-        foreach ($facturas as $factura) {
-            $detalle = Detalles::select(
-                'detalles.id',
-                'productos.nombre as producto',
-                'detalles.cantidad',
-                'detalles.subtotal',
-                'detalles.precio_tipo'
-            )
-                ->join('productos', 'productos.id', 'detalles.producto_id')
-                ->where('factura_id', $factura->id)->get();
-            $factura->detalles =  $detalle;
-            array_push($reporte, [
-                'factura' => $factura
-            ]);
-        }
-        return   $reporte;
+        $reporte = $facturas->map(function ($factura) {
+            $factura->detalles = $factura->detalles;
+            return ['factura' => $factura];
+        });
+
+        return $reporte;
+
+
+
+
+        // $reporte = [];
+        // $facturas =  Facturas::select(
+        //     'facturas.id',
+        //     'clientes.nombres as cliente',
+        //     'facturas.fecha',
+        //     'facturas.subtotal',
+        //     'facturas.iva',
+        //     'facturas.total',
+        //     'facturas.observacion',
+        //     'facturas.estado'
+        // )
+        //     ->join('clientes', 'clientes.id', 'facturas.cliente_id')
+        //     ->orderBy('facturas.created_at', 'desc')
+
+        //     ->where('clientes.nombres', 'LIKE', '%' . $request->filter . '%')
+        //     ->orWhere('facturas.id', 'LIKE', '%' . $request->filter . '%')
+        //     ->get();
+
+        // foreach ($facturas as $factura) {
+        //     $detalle = Detalles::select(
+        //         'detalles.id',
+        //         'productos.nombre as producto',
+        //         'detalles.cantidad',
+        //         'detalles.subtotal',
+        //         'detalles.precio_tipo'
+        //     )
+        //         ->join('productos', 'productos.id', 'detalles.producto_id')
+        //         ->where('factura_id', $factura->id)->get();
+        //     $factura->detalles =  $detalle;
+        //     array_push($reporte, [
+        //         'factura' => $factura
+        //     ]);
+        // }
+        // return   $reporte;
     }
 
 

@@ -3,8 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\Creditos;
+use App\Models\DetalleCreditos;
 use App\Models\Detalles;
 use App\Models\Facturas;
+use App\Models\FormaPago;
+use App\Models\FormaPagoFactura;
 use App\Models\Ordenes;
 use App\Models\Reporte;
 use App\Models\Usuarios;
@@ -89,7 +92,170 @@ class ReporteController extends Controller
         //
     }
 
+    public function totalPorFormasPago(Request $request)
+    {
 
+
+        $facturas = DetalleCreditos::join('forma_pagos', 'forma_pagos.id', '=', 'detalle_creditos.forma_pago_id')
+            ->join('creditos', 'creditos.id', '=', 'detalle_creditos.credito_id')
+            ->whereDate('detalle_creditos.fecha', '=', now()->format('Y-m-d'))
+            ->select('forma_pagos.id as forma_pago_id',  'forma_pagos.label', DB::raw('SUM(detalle_creditos.abono) as total'))
+            ->groupBy('forma_pagos.id')
+            ->get();
+
+
+        $creditos = FormaPagoFactura::join('forma_pagos', 'forma_pagos.id', '=', 'forma_pago_facturas.forma_pago_id')
+            ->join('facturas', 'facturas.id', '=', 'forma_pago_facturas.factura_id')
+            ->whereDate('facturas.fecha', '=', now()->format('Y-m-d'))
+            ->select('forma_pagos.id as forma_pago_id',  'forma_pagos.label', DB::raw('SUM(forma_pago_facturas.valor) as total'))
+            ->where('facturas.es_credito', '=', 0)
+            ->groupBy('forma_pagos.id')
+            ->get();
+
+        // Combinar los resultados en un solo arreglo
+        $resultados = $facturas->concat($creditos)->toArray();
+
+        // Agrupar por forma_pago_id y sumar los totales correspondientes
+        $agrupados = collect($resultados)->groupBy('forma_pago_id')->map(function ($grupo) {
+            $sumaTotal = $grupo->sum('total');
+            $primerElemento = $grupo->first();
+
+            return [
+                'forma_pago_id' => $primerElemento['forma_pago_id'],
+                'label' => $primerElemento['label'],
+                'total' => $sumaTotal,
+            ];
+        })->values()->all();
+
+        return $agrupados;
+
+
+
+
+
+        $factura = FormaPagoFactura::with('FormaPago')
+            ->join('facturas', 'facturas.id', '=', 'forma_pago_facturas.factura_id')
+            ->select('forma_pago_id', DB::raw('SUM(valor) as total'))
+            ->whereDate('facturas.fecha', '=', now()->format('Y-m-d'))
+            ->where('facturas.es_credito', '=', 0)
+            ->groupBy('forma_pago_id')
+            ->get();
+
+
+        $credito = FormaPagoFactura::with('FormaPago')
+            ->join('facturas', 'facturas.id', '=', 'forma_pago_facturas.factura_id')
+            ->leftJoin('detalle_creditos', 'facturas.credito_id', '=', 'detalle_creditos.credito_id')
+            ->leftJoin('forma_pagos', function ($join) {
+                $join->on('forma_pagos.id', '=', 'detalle_creditos.forma_pago_id');
+            })
+            ->select('forma_pagos.id as forma_pago_id', DB::raw('SUM(detalle_creditos.abono) as total'))
+            ->whereDate('facturas.fecha', '=', now()->format('Y-m-d'))
+            ->where('facturas.es_credito', '=', 1)
+            ->groupBy('forma_pagos.id')
+            ->get();
+
+        // Unificar los resultados y sumar las formas de pago por ID repetido
+        $unificado = $factura->concat($credito)->groupBy('forma_pago_id')->map(function ($group) {
+            return [
+                'forma_pago_id' => $group->first()->forma_pago_id,
+                'total' => $group->sum('total'),
+                'forma_pago' => $group->first()->FormaPago
+            ];
+        })->values();
+
+
+
+
+
+        return  $unificado;
+
+
+
+
+        // $sumaPorFormaPago = FormaPagoFactura::with('FormaPago')
+        //     ->join('facturas', 'facturas.id', '=', 'forma_pago_facturas.factura_id')
+        //     ->select('forma_pago_id', DB::raw('SUM(valor) as total'))
+        //     ->whereDate('facturas.fecha', '=', now()->format('Y-m-d'))
+        //     ->where('facturas.es_credito', '=', 0)
+        //     ->groupBy('forma_pago_id')
+        //     ->get();
+
+        $factura = FormaPagoFactura::with('FormaPago')
+            ->join('facturas', 'facturas.id', '=', 'forma_pago_facturas.factura_id')
+            ->select('forma_pago_id', DB::raw('SUM(valor) as total'))
+            ->whereDate('facturas.fecha', '=', now()->format('Y-m-d'))
+            ->where('facturas.es_credito', '=', 0)
+            ->groupBy('forma_pago_id')
+            ->get();
+
+
+        $credito = FormaPagoFactura::with('FormaPago')
+            ->join('facturas', 'facturas.id', '=', 'forma_pago_facturas.factura_id')
+            ->leftJoin('detalle_creditos', 'facturas.credito_id', '=', 'detalle_creditos.credito_id')
+            ->leftJoin('forma_pagos', function ($join) {
+                $join->on('forma_pagos.id', '=', 'detalle_creditos.forma_pago_id');
+            })
+            ->select('forma_pagos.id as forma_pago_id', DB::raw('SUM(detalle_creditos.abono) as total'))
+            ->whereDate('facturas.fecha', '=', now()->format('Y-m-d'))
+            ->where('facturas.es_credito', '=', 1)
+            ->groupBy('forma_pagos.id')
+            ->get();
+
+
+
+        return ["facturas" =>  $factura, "Credito" =>  $credito];
+
+
+
+
+
+        // $sumaPorFormaPago = FormaPagoFactura::with('FormaPago')
+        //     ->join('facturas', 'facturas.id', '=', 'forma_pago_facturas.factura_id')
+        //     ->leftJoin('detalle_creditos', 'facturas.credito_id', '=', 'detalle_creditos.credito_id')
+        //     ->leftJoin('forma_pagos', function ($join) {
+        //         $join->on('forma_pagos.id', '=', 'forma_pago_facturas.forma_pago_id')
+        //             ->orOn('forma_pagos.id', '=', 'detalle_creditos.forma_pago_id');
+        //     })
+        //     ->select('forma_pagos.label', DB::raw('SUM(CASE 
+        //             WHEN forma_pagos.cash >= 0 THEN 
+        //                 CASE 
+        //                     WHEN facturas.es_credito = 1 THEN detalle_creditos.abono 
+        //                     ELSE forma_pago_facturas.valor 
+        //                 END
+        //             ELSE 
+        //                 forma_pago_facturas.valor 
+        //             END) as total'))
+        //     ->whereDate('facturas.fecha', '=', now()->format('Y-m-d'))
+        //     ->groupBy('forma_pagos.label')
+        //     ->get();
+
+        /*
+        $sumaPorFormaPago = FormaPagoFactura::join('facturas', 'facturas.id', '=', 'forma_pago_facturas.factura_id')
+            ->leftJoin('detalle_creditos', 'facturas.credito_id', '=', 'detalle_creditos.credito_id')
+            ->leftJoin('forma_pagos', function ($join) {
+                $join->on('forma_pagos.id', '=', 'forma_pago_facturas.forma_pago_id')
+                    ->orOn('forma_pagos.id', '=', 'detalle_creditos.forma_pago_id');
+            })
+            ->select('forma_pagos.nombre', DB::raw('SUM(CASE 
+                    WHEN facturas.es_credito = 1 THEN detalle_creditos.abono 
+                    ELSE forma_pago_facturas.valor 
+                END) as total'))
+
+            // ->select('forma_pagos.nombre', DB::raw('SUM(CASE 
+            //         WHEN forma_pagos.cash >= 0 THEN 
+            //             CASE 
+            //                 WHEN facturas.es_credito = 1 THEN detalle_creditos.abono 
+            //                 ELSE forma_pago_facturas.valor 
+            //             END
+            //         ELSE 
+            //             forma_pago_facturas.valor 
+            //         END) as total'))
+            ->whereDate('facturas.fecha', '=', now()->format('Y-m-d'))
+            ->groupBy('forma_pagos.nombre')
+            ->get();
+
+ */
+    }
     public function ingresosXempleado(Request $request)
     {
 
