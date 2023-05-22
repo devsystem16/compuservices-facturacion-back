@@ -24,4 +24,9 @@ class Clientes extends Model
     {
         return $this->hasMany(Creditos::class, 'cliente_id', 'id');
     }
+
+    public function proformas()
+    {
+        return $this->hasMany(Proforma::class, 'cliente_id');
+    }
 }

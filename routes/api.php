@@ -7,6 +7,7 @@ use App\Http\Controllers\CreditosController;
 use App\Http\Controllers\FacturasController;
 use App\Http\Controllers\FormaPagoController;
 use App\Http\Controllers\PantallaposController;
+use App\Http\Controllers\ProformaController;
 use App\Http\Controllers\TecnicoController;
 use App\Http\Controllers\UsuariosController;
 use App\Http\Controllers\ReporteController;
@@ -44,6 +45,7 @@ Route::resource('forma-pagos', FormaPagoController::class);
 Route::resource('tecnicos', TecnicoController::class);
 Route::resource('facturas', FacturasController::class);
 Route::resource('creditos', CreditosController::class);
+Route::resource('proformas', ProformaController::class);
 
 Route::get('/reporte/ventas',  [FacturasController::class, 'reporteDiario']);
 Route::get('/reporte/historicofacturas/{limite}',  [FacturasController::class, 'historiofacturas']);
