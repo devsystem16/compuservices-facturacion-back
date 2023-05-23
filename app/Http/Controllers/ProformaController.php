@@ -10,6 +10,22 @@ use Illuminate\Support\Facades\DB;
 
 class ProformaController extends Controller
 {
+
+    public function eliminarProforma($idProforma)
+    {
+        try {
+            DB::beginTransaction();
+            $Proforma = Proforma::where('id', $idProforma)->first();
+            $Proforma->delete();
+            DB::commit();
+            return  ["estado" =>  200,  "proforma" => $Proforma, "Message" => "Proforma Eliminada"];
+        } catch (Exception $e) {
+            DB::rollBack();
+            return response()->json(["estado" => 400, "Message" => "Ocurrió un error en el servidor.", "proforma" =>  []], 200);
+        }
+    }
+
+
     /**
      * Display a listing of the resource.
      *
@@ -18,9 +34,13 @@ class ProformaController extends Controller
     public function index()
     {
 
-        $proformas = Proforma::with('cliente', 'detallesProforma.producto')->get();
 
-        return  $proformas;
+
+        $proformas = Proforma::with('cliente', 'detallesProforma.producto')
+            ->whereDate('fecha_vencimiento', '>=', date('Y-m-d'))
+            ->get();
+
+        return $proformas;
     }
 
     /**
@@ -105,6 +125,5 @@ class ProformaController extends Controller
      */
     public function destroy(Proforma $proforma)
     {
-        //
     }
 }

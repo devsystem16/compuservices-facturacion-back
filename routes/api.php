@@ -46,6 +46,7 @@ Route::resource('tecnicos', TecnicoController::class);
 Route::resource('facturas', FacturasController::class);
 Route::resource('creditos', CreditosController::class);
 Route::resource('proformas', ProformaController::class);
+Route::post('/proformas/eliminar/{idProforma}',  [ProformaController::class, 'eliminarProforma']);
 
 Route::get('/reporte/ventas',  [FacturasController::class, 'reporteDiario']);
 Route::get('/reporte/historicofacturas/{limite}',  [FacturasController::class, 'historiofacturas']);
