@@ -107,7 +107,7 @@ class ProductosController extends Controller
             'codigo_barra',
             'stock'
         )
-            ->where('stock', '>', 0)
+            // ->where('stock', '>', 0)
             ->orderBy('created_at', 'desc')
             ->take($limite)
             ->get();
