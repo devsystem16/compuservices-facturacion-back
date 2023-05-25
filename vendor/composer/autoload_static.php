@@ -508,6 +508,7 @@ class ComposerStaticInit4dcd557e011d69b91d0dc17137eb671c
         'App\\Http\\Controllers\\Controller' => __DIR__ . '/../..' . '/app/Http/Controllers/Controller.php',
         'App\\Http\\Controllers\\CreditosController' => __DIR__ . '/../..' . '/app/Http/Controllers/CreditosController.php',
         'App\\Http\\Controllers\\DetalleCreditosController' => __DIR__ . '/../..' . '/app/Http/Controllers/DetalleCreditosController.php',
+        'App\\Http\\Controllers\\DetalleProformaController' => __DIR__ . '/../..' . '/app/Http/Controllers/DetalleProformaController.php',
         'App\\Http\\Controllers\\FacturasController' => __DIR__ . '/../..' . '/app/Http/Controllers/FacturasController.php',
         'App\\Http\\Controllers\\FormaPagoController' => __DIR__ . '/../..' . '/app/Http/Controllers/FormaPagoController.php',
         'App\\Http\\Controllers\\FormaPagoFacturaController' => __DIR__ . '/../..' . '/app/Http/Controllers/FormaPagoFacturaController.php',

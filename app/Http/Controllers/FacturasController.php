@@ -58,6 +58,10 @@ class FacturasController extends Controller
             DB::beginTransaction();
             $facturas = Facturas::create($request->cabecera);
 
+
+
+
+
             foreach ($request->detalle as $detalle) {
 
                 $producto = Productos::find($detalle["producto_id"]);
@@ -306,7 +310,6 @@ class FacturasController extends Controller
     public function historiofacturasFilter(Request $request)
     {
 
-
         $facturas = Facturas::select(
             'facturas.id',
             'clientes.nombres as cliente',
@@ -319,8 +322,10 @@ class FacturasController extends Controller
         )
             ->join('clientes', 'clientes.id', '=', 'facturas.cliente_id')
             ->where(function ($query) use ($request) {
-                $query->where('clientes.nombres', 'LIKE', '%' . $request->filter . '%')
-                    ->orWhere('facturas.id', 'LIKE', '%' . $request->filter . '%');
+                $searchTerms = explode(' ', $request->filter);
+                foreach ($searchTerms as $term) {
+                    $query->where('clientes.nombres', 'LIKE', '%' . $term . '%');
+                }
             })
             ->orderBy('facturas.created_at', 'desc')
             ->take($request->limite)
@@ -332,6 +337,32 @@ class FacturasController extends Controller
         });
 
         return $reporte;
+
+        // $facturas = Facturas::select(
+        //     'facturas.id',
+        //     'clientes.nombres as cliente',
+        //     'facturas.fecha',
+        //     'facturas.subtotal',
+        //     'facturas.iva',
+        //     'facturas.total',
+        //     'facturas.observacion',
+        //     'facturas.estado'
+        // )
+        //     ->join('clientes', 'clientes.id', '=', 'facturas.cliente_id')
+        //     ->where(function ($query) use ($request) {
+        //         $query->where('clientes.nombres', 'LIKE', '%' . $request->filter . '%')
+        //             ->orWhere('facturas.id', 'LIKE', '%' . $request->filter . '%');
+        //     })
+        //     ->orderBy('facturas.created_at', 'desc')
+        //     ->take($request->limite)
+        //     ->get();
+
+        // $reporte = $facturas->map(function ($factura) {
+        //     $factura->detalles = $factura->detalles;
+        //     return ['factura' => $factura];
+        // });
+
+        // return $reporte;
 
 
 
