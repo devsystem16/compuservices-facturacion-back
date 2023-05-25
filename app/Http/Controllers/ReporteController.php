@@ -109,6 +109,7 @@ class ReporteController extends Controller
             ->whereDate('facturas.fecha', '=', now()->format('Y-m-d'))
             ->select('forma_pagos.id as forma_pago_id',  'forma_pagos.label', DB::raw('SUM(forma_pago_facturas.valor) as total'))
             ->where('facturas.es_credito', '=', 0)
+            ->where('facturas.estado', '<>',  'Anulada')
             ->groupBy('forma_pagos.id')
             ->get();
 
