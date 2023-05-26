@@ -105,6 +105,7 @@ class ProductosController extends Controller
             'precio_compra',
             'precio_distribuidor',
             'codigo_barra',
+            'descripcion',
             'stock'
         )
             // ->where('stock', '>', 0)
