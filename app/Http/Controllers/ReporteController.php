@@ -9,8 +9,11 @@ use App\Models\Facturas;
 use App\Models\FormaPago;
 use App\Models\FormaPagoFactura;
 use App\Models\Ordenes;
+use App\Models\Periodo;
 use App\Models\Reporte;
+use App\Models\Retiros;
 use App\Models\Usuarios;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -96,20 +99,38 @@ class ReporteController extends Controller
     {
 
 
+        $idPeriodo = -1;
+        try {
+            $periodoActivo = Periodo::where('estado', 'Abierto')->firstOrFail();
+            $idPeriodo = $periodoActivo->id;
+        } catch (Exception $e) {
+            $idPeriodo =  -1;
+        }
+
+
+
+        // $periodoActivo = Periodo::where('estado', 'Abierto')->first();
+
+
         $facturas = DetalleCreditos::join('forma_pagos', 'forma_pagos.id', '=', 'detalle_creditos.forma_pago_id')
             ->join('creditos', 'creditos.id', '=', 'detalle_creditos.credito_id')
-            ->whereDate('detalle_creditos.fecha', '=', now()->format('Y-m-d'))
+            ->leftJoin('facturas', 'facturas.credito_id', '=', 'creditos.id')
+            // ->whereDate('detalle_creditos.fecha', '=', now()->format('Y-m-d'))
             ->select('forma_pagos.id as forma_pago_id',  'forma_pagos.label', DB::raw('SUM(detalle_creditos.abono) as total'))
+            ->where('facturas.estado', '<>',  'Anulada')
+            ->where('detalle_creditos.periodo_id', '=',    $idPeriodo)
+
             ->groupBy('forma_pagos.id')
             ->get();
 
 
         $creditos = FormaPagoFactura::join('forma_pagos', 'forma_pagos.id', '=', 'forma_pago_facturas.forma_pago_id')
             ->join('facturas', 'facturas.id', '=', 'forma_pago_facturas.factura_id')
-            ->whereDate('facturas.fecha', '=', now()->format('Y-m-d'))
+            // ->whereDate('facturas.fecha', '=', now()->format('Y-m-d'))
             ->select('forma_pagos.id as forma_pago_id',  'forma_pagos.label', DB::raw('SUM(forma_pago_facturas.valor) as total'))
             ->where('facturas.es_credito', '=', 0)
             ->where('facturas.estado', '<>',  'Anulada')
+            ->where('facturas.periodo_id', '=',   $idPeriodo)
             ->groupBy('forma_pagos.id')
             ->get();
 
@@ -128,7 +149,11 @@ class ReporteController extends Controller
             ];
         })->values()->all();
 
-        return $agrupados;
+
+
+        $sumaValorRetiro = Retiros::where('periodo_id',  $idPeriodo)->sum('valorRetiro');
+
+        return ["reporteFormasPago" => $agrupados, "totalRetiros"  => $sumaValorRetiro];
 
 
 
@@ -390,6 +415,11 @@ class ReporteController extends Controller
         foreach ($creditos as $credito) {
             $total_ventas +=  $credito->totalAbono;
         }
+
+
+
+
+
 
 
         return ["total_ventas" =>  $total_ventas, "facturas" =>     $facturas, "ordenes" => $ordenes, "creditos" => $creditos];

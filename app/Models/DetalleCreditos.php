@@ -13,7 +13,7 @@ class DetalleCreditos extends Model
 
     protected $table = 'detalle_creditos';
     protected $dates = ['deleted_at'];
-    protected $fillable = ['credito_id', 'forma_pago_id', 'abono', 'fecha', 'comentario'];
+    protected $fillable = ['credito_id', 'forma_pago_id', 'abono', 'fecha', 'comentario', 'periodo_id'];
 
 
     public function FormaPago()

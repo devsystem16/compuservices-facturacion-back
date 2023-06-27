@@ -1,0 +1,138 @@
+-- Ejecutar las 4 migraciones de las tablas nuevas.
+
+php artisan migrate --path=/database/migrations/2023_06_07_150145_create_periodos_table.php
+php artisan migrate --path=/database/migrations/2023_06_07_151256_create_estacions_table.php
+php artisan migrate --path=/database/migrations/2023_06_07_151506_create_control_estacions_table.php
+php artisan migrate --path=/database/migrations/2023_06_07_154633_create_retiros_table.php
+
+
+-- Creacion de caja.
+INSERT INTO `compuservices_facturacion_respaldo`.`estacions` (`ip`, `nombre`, `codigo`, `estado`) VALUES ('127.0.0.1', 'CAJA 1', 'C001', 'Activo');
+
+
+
+-- aPLICAR SOBRE TABLA PERIODO
+
+ALTER TABLE `compuservices_facturacion_respaldo`.`periodos` 
+DROP FOREIGN KEY `periodos_usuario_id_cierre_foreign`;
+ALTER TABLE `compuservices_facturacion_respaldo`.`periodos` 
+CHANGE COLUMN `fecha_cierre` `fecha_cierre` DATE NULL ,
+CHANGE COLUMN `usuario_id_cierre` `usuario_id_cierre` INT UNSIGNED NULL ,
+CHANGE COLUMN `observaciones` `observaciones` VARCHAR(255) NULL ;
+ALTER TABLE `compuservices_facturacion_respaldo`.`periodos` 
+ADD CONSTRAINT `periodos_usuario_id_cierre_foreign`
+  FOREIGN KEY (`usuario_id_cierre`)
+  REFERENCES `compuservices_facturacion_respaldo`.`usuarios` (`id`);
+
+
+-- FECHAS CON HORA
+
+ALTER TABLE `compuservices_facturacion_respaldo`.`periodos` 
+CHANGE COLUMN `fecha_apertura` `fecha_apertura` TIMESTAMP NOT NULL ,
+CHANGE COLUMN `fecha_cierre` `fecha_cierre` TIMESTAMP NULL DEFAULT NULL ;
+
+
+
+--- Actualizacion tabla periodo.
+ALTER TABLE `compuservices_facturacion_respaldo`.`facturas` 
+ADD COLUMN `periodo_id` INT NULL AFTER `credito_id`;
+
+
+Eliminar indice que esta problematico
+ ALTER TABLE facturas DROP INDEX fecha_idx;
+ 
+ 
+ -- Alter table creditos para que acepte PERIODO
+ALTER TABLE `compuservices_facturacion_respaldo`.`creditos` 
+ADD COLUMN `periodo_id` INT NULL AFTER `total`;
+
+
+-- Alter table ordenes para que acepte PERIODO
+ALTER TABLE `compuservices_facturacion_respaldo`.`ordenes` 
+ADD COLUMN `periodo_id` INT NULL AFTER `factura_relacionada`;
+
+
+ ALTER TABLE `compuservices_facturacion_respaldo`.`detalle_creditos` 
+ADD COLUMN `periodo_id` INT NULL AFTER `comentario`;
+
+
+Se añade
+fondo_asignado en la tabla Periodos
+
+-- Se actialozo el SP De REPORTES:
+
+  Schema::create('periodos', function (Blueprint $table) {
+
+            $table->increments('id');
+            $table->date('fecha_apertura');
+            $table->date('fecha_cierre');
+            $table->integer('usuario_id_apertura')->unsigned(); // Usuario que apertura el periodo.
+            $table->integer('usuario_id_cierre')->unsigned(); // Usuario que cierra el periodo.
+            $table->string('estado');
+            $table->string('observaciones');
+
+            $table->foreign('usuario_id_apertura')->references('id')->on("usuarios");
+            $table->foreign('usuario_id_cierre')->references('id')->on("usuarios");
+
+
+            $table->timestamps();
+            $table->softDeletes();
+        });
+		
+		
+		
+		 Schema::create('estacions', function (Blueprint $table) {
+            $table->increments('id');
+            $table->string('ip');
+            $table->string('nombre');
+            $table->string('codigo');
+            $table->string('estado');
+            $table->timestamps();
+            $table->softDeletes();
+        });
+		
+		
+		Schema::create('control_estacions', function (Blueprint $table) {
+            $table->increments('id');
+            $table->integer('estacion_id')->unsigned();
+            $table->integer('periodo_id')->unsigned();
+
+            $table->float('valor_fondo_asignado')->nullable();
+            $table->float('valor_fondo_retirado')->nullable();
+
+            $table->integer('usuario_fondo_asignado')->unsigned()->nullable();
+            $table->integer('usuario_fondo_retiro')->unsigned()->nullable();
+
+            $table->date('FechaFondoAsignado')->nullable();
+            $table->date('FechaFondoRetirado')->nullable();
+
+            $table->string('estado', '200')->nullable();
+            $table->string('motivo_descuadre')->nullable();
+
+            $table->foreign('estacion_id')->references('id')->on("estacions");
+            $table->foreign('periodo_id')->references('id')->on("periodos");
+
+            $table->timestamps();
+            $table->softDeletes();
+        });
+		
+		
+		        Schema::create('retiros', function (Blueprint $table) {
+            $table->increments('id');
+            $table->integer('estacion_id')->unsigned();
+            $table->integer('periodo_id')->unsigned();
+
+            $table->string('concepto', '500')->nullable();
+            $table->float('valorRetiro');
+            $table->string('observacion', '900')->nullable();
+
+
+            $table->foreign('estacion_id')->references('id')->on("estacions");
+            $table->foreign('periodo_id')->references('id')->on("periodos");
+            $table->timestamps();
+            $table->softDeletes();
+        });
+		
+		
+		
+-- Denominaciones.!!

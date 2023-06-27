@@ -8,6 +8,7 @@ use App\Models\Detalles;
 use App\Models\Creditos;
 use App\Models\FormaPago;
 use App\Models\FormaPagoFactura;
+use App\Models\Periodo;
 use App\Models\Productos;
 use Illuminate\Http\Request;
 
@@ -376,7 +377,10 @@ class FacturasController extends Controller
             ->where(function ($query) use ($request) {
                 $searchTerms = explode(' ', $request->filter);
                 foreach ($searchTerms as $term) {
-                    $query->where('clientes.nombres', 'LIKE', '%' . $term . '%');
+                    $query->where(function ($query) use ($term) {
+                        $query->where('clientes.nombres', 'LIKE', '%' . $term . '%')
+                            ->orWhere('facturas.id', 'LIKE', '%' . $term . '%');
+                    });
                 }
             })
             ->orderBy('facturas.created_at', 'desc')
@@ -412,7 +416,10 @@ class FacturasController extends Controller
             ->where(function ($query) use ($request) {
                 $searchTerms = explode(' ', $request->filter);
                 foreach ($searchTerms as $term) {
-                    $query->where('clientes.nombres', 'LIKE', '%' . $term . '%');
+                    $query->where(function ($query) use ($term) {
+                        $query->where('clientes.nombres', 'LIKE', '%' . $term . '%')
+                            ->orWhere('facturas.id', 'LIKE', '%' . $term . '%');
+                    });
                 }
             })
             ->orderBy('facturas.created_at', 'desc')
@@ -538,7 +545,17 @@ class FacturasController extends Controller
             ->first();
 
 
-        $facturas = Facturas::where('fecha', '>=', $fecha_hoy)
+        // $periodoActivo = Periodo::where('estado', 'Abierto')->first();
+        $idPeriodo = -1;
+        try {
+            $periodoActivo = Periodo::where('estado', 'Abierto')->firstOrFail();
+            $idPeriodo = $periodoActivo->id;
+        } catch (Exception $e) {
+            $idPeriodo =  -1;
+        }
+
+        // $facturas = Facturas::where('fecha', '>=', $fecha_hoy)
+        $facturas = Facturas::where('periodo_id', '=',  $idPeriodo)
             ->select(DB::raw('count(*) as NumeroFacturas'))
             ->where('estado', '=', 'cerrada')
             ->first();

@@ -7,6 +7,7 @@ use App\Models\Creditos;
 use App\Models\DetalleCreditos;
 use App\Models\Detalles;
 use App\Models\Facturas;
+use App\Models\Periodo;
 use App\Models\Productos;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
@@ -46,6 +47,16 @@ class CreditosController extends Controller
     {
         try {
             DB::beginTransaction();
+
+            $idPeriodo = -1;
+            try {
+                $periodoActivo = Periodo::where('estado', 'Abierto')->firstOrFail();
+                $idPeriodo = $periodoActivo->id;
+            } catch (Exception $e) {
+                $idPeriodo =  -1;
+            }
+
+
             $creditos = Creditos::create($request->cabecera);
 
             foreach ($request->detalle as $detalle) {
@@ -54,25 +65,34 @@ class CreditosController extends Controller
                         'credito_id' => $creditos->id,
                         'abono' => $detalle["abono"],
                         'fecha' => $detalle["fecha"],
-                        'comentario' =>  $detalle["comentario"]
+                        'comentario' =>  $detalle["comentario"],
+                        'periodo_id' =>    $idPeriodo
                     ]
                 );
             }
 
             // En caso de tener formas de pago.
+            $sumaPagos = 0;
             foreach ($request->formasPago as $formasPago) {
                 if ($formasPago["valor"] > 0) {
+
+                    $sumaPagos += $formasPago["valor"];
                     DetalleCreditos::create(
                         [
                             'credito_id' => $creditos->id,
                             'abono' => $formasPago["valor"],
                             'fecha' =>  now()->format('Y-m-d'),
                             'forma_pago_id' => $formasPago["id"],
-                            'comentario' =>   "Abono-inmediato"
+                            'comentario' =>   "Abono-inmediato",
+                            'periodo_id' =>    $idPeriodo
                         ]
                     );
                 }
             }
+
+            $saldo =  $creditos->total  -  $sumaPagos;
+            $creditos->saldo =   $saldo;
+            $creditos->save();
 
             DB::commit();
             return  ["estado" =>  200,  "credito" =>     $creditos];
@@ -160,7 +180,8 @@ class CreditosController extends Controller
                 'abono' => $request->abono,
                 'fecha' => $fecha_hoy,
                 'forma_pago_id' => $request->forma_pago_id,
-                'comentario' =>  "Abono"
+                'comentario' =>  "Abono",
+                'periodo_id' =>  $request->periodo_id
             ]
         );
 

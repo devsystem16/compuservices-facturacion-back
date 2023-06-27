@@ -7,10 +7,12 @@ use App\Http\Controllers\CreditosController;
 use App\Http\Controllers\FacturasController;
 use App\Http\Controllers\FormaPagoController;
 use App\Http\Controllers\PantallaposController;
+use App\Http\Controllers\PeriodoController;
 use App\Http\Controllers\ProformaController;
 use App\Http\Controllers\TecnicoController;
 use App\Http\Controllers\UsuariosController;
 use App\Http\Controllers\ReporteController;
+use App\Http\Controllers\RetirosController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -78,3 +80,15 @@ Route::get('/pantallapos/acceso/obtener-acceso/{tipoUsuario}',  [PantallaposCont
 Route::post('/reportes/ventas-diarias',  [ReporteController::class, 'ventasDiarias']);
 Route::post('/reportes/ingresos-empleado',  [ReporteController::class, 'ingresosXempleado']);
 Route::get('/reportes/ventas-diarias/forma-pago',  [ReporteController::class, 'totalPorFormasPago']);
+
+
+
+// PERIODO
+Route::resource('periodo', PeriodoController::class);
+Route::get('/periodo/verificar-periodo/apertura',  [PeriodoController::class, 'existePeriodoAbierto']);
+Route::post('/periodo/cerrar-periodo/cierre/{id}',  [PeriodoController::class, 'cerrarPeriodo']);
+Route::get('/periodo/verificar-periodo/retiros/obtenerRetiros',  [PeriodoController::class, 'obtenerRetiros']);
+
+
+Route::resource('retiros', RetirosController::class);
+Route::post('/retiros/eliminar/retiro/{idRetiro}',  [RetirosController::class, 'eliminarRetiro']);
