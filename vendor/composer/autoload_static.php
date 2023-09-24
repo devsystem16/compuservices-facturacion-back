@@ -521,6 +521,7 @@ class ComposerStaticInit4dcd557e011d69b91d0dc17137eb671c
         'App\\Http\\Controllers\\ProductosController' => __DIR__ . '/../..' . '/app/Http/Controllers/ProductosController.php',
         'App\\Http\\Controllers\\ProformaController' => __DIR__ . '/../..' . '/app/Http/Controllers/ProformaController.php',
         'App\\Http\\Controllers\\ReporteController' => __DIR__ . '/../..' . '/app/Http/Controllers/ReporteController.php',
+        'App\\Http\\Controllers\\RetirosController' => __DIR__ . '/../..' . '/app/Http/Controllers/RetirosController.php',
         'App\\Http\\Controllers\\TecnicoController' => __DIR__ . '/../..' . '/app/Http/Controllers/TecnicoController.php',
         'App\\Http\\Controllers\\TipoUsuarioController' => __DIR__ . '/../..' . '/app/Http/Controllers/TipoUsuarioController.php',
         'App\\Http\\Controllers\\UsuariosController' => __DIR__ . '/../..' . '/app/Http/Controllers/UsuariosController.php',
