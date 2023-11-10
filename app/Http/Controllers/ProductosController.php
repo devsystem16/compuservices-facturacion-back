@@ -106,7 +106,10 @@ class ProductosController extends Controller
             'precio_distribuidor',
             'codigo_barra',
             'descripcion',
-            'stock'
+            'stock',
+            'gravaIva',
+            'pocentaje'
+
         )
             // ->where('stock', '>', 0)
             ->orderBy('created_at', 'desc')

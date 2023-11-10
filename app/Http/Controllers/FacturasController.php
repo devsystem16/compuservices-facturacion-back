@@ -250,6 +250,7 @@ class FacturasController extends Controller
             $detalle = Detalles::select(
                 'detalles.id',
                 'productos.nombre as producto',
+                'productos.gravaIva',
                 'detalles.cantidad',
                 'detalles.subtotal',
                 'detalles.precio_tipo'

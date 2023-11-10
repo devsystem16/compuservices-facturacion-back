@@ -11,9 +11,10 @@ class Productos extends Model
     use HasFactory;
     use SoftDeletes;
 
-    protected $table ='productos';
+    protected $table = 'productos';
     protected $dates = ['deleted_at'];
-    protected $fillable = ['nombre', 'descripcion','codigo_barra','precio_publico','precio_tecnico','precio_compra' , 'precio_distribuidor','stock'];
-
-
+    protected $fillable = [
+        'nombre', 'descripcion', 'codigo_barra', 'precio_publico', 'precio_tecnico', 'precio_compra', 'precio_distribuidor', 'stock',
+        'gravaIva', 'pocentaje'
+    ];
 }

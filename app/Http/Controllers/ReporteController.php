@@ -16,6 +16,7 @@ use App\Models\Usuarios;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class ReporteController extends Controller
 {
@@ -162,6 +163,7 @@ class ReporteController extends Controller
         $factura = FormaPagoFactura::with('FormaPago')
             ->join('facturas', 'facturas.id', '=', 'forma_pago_facturas.factura_id')
             ->select('forma_pago_id', DB::raw('SUM(valor) as total'))
+
             ->whereDate('facturas.fecha', '=', now()->format('Y-m-d'))
             ->where('facturas.es_credito', '=', 0)
             ->groupBy('forma_pago_id')
@@ -182,9 +184,12 @@ class ReporteController extends Controller
 
         // Unificar los resultados y sumar las formas de pago por ID repetido
         $unificado = $factura->concat($credito)->groupBy('forma_pago_id')->map(function ($group) {
+
+
             return [
                 'forma_pago_id' => $group->first()->forma_pago_id,
                 'total' => $group->sum('total'),
+
                 'forma_pago' => $group->first()->FormaPago
             ];
         })->values();
@@ -360,6 +365,8 @@ class ReporteController extends Controller
         $total_ventas = 0;
 
 
+
+
         $facturas =  Facturas::select(
             'facturas.id  as idControl',
             'facturas.fecha',
@@ -370,10 +377,12 @@ class ReporteController extends Controller
             ->selectRaw("'Factura' as tipo")
             ->join('clientes', 'clientes.id', 'facturas.cliente_id')
             ->orderBy('facturas.created_at', 'desc')
-            ->whereBetween('facturas.fecha', [$request->fecha_desde, $request->fecha_hasta])
+            ->whereRaw("DATE_FORMAT(facturas.fecha, '%Y-%m-%d') BETWEEN ? AND ?", [$request->fecha_desde, $request->fecha_hasta])
+            // ->whereBetween('facturas.fecha', [$request->fecha_desde,  $request->fecha_hasta])
             ->where('facturas.estado', '=',  'cerrada')
-            // ->orWhere('facturas.id', 'LIKE', '%' . $request->filter . '%')
             ->get();
+
+
         $ordenes =  Ordenes::select(
             'ordenes.id as idControl',
             'ordenes.fecha as fecha',

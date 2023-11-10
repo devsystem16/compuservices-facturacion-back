@@ -135,4 +135,12 @@ fondo_asignado en la tabla Periodos
 		
 		
 		
--- Denominaciones.!!
+ # Denominaciones.!!
+
+
+# Añadir Campo a producto para saber si graba iva.
+
+
+ALTER TABLE `market_liset`.`productos` 
+ADD COLUMN `gravaIva` TINYINT NULL AFTER `deleted_at`,
+ADD COLUMN `pocentaje` DOUBLE NULL AFTER `gravaIva`;
