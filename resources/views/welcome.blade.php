@@ -26,8 +26,8 @@
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="theme-color" content="#000000"/>
     <meta name="description" content="Web site created using create-react-app"/>
-    <link rel="apple-touch-icon" href="public//logo192.png"/>
-    <link rel="manifest" href="public//manifest.json"/>
+    <link rel="apple-touch-icon" href="public/logo192.png"/>
+    <link rel="manifest" href="public/manifest.json"/>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto+Mono|Roboto+Slab|Roboto:300,400,500,700"/>
     <script src="//cdn.jsdelivr.net/npm/alertifyjs@1.13.1/build/alertify.min.js"></script>
     <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/alertifyjs@1.13.1/build/css/alertify.min.css"/>
