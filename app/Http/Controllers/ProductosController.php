@@ -35,6 +35,9 @@ class ProductosController extends Controller
      */
     public function store(Request $request)
     {
+
+        return $request->all();
+
         $productos = Productos::create($request->all());
         return  $productos;
     }
