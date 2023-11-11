@@ -53,7 +53,7 @@ return [
     */
 
     // 'url' => env('APP_URL', 'https://facturacion.grupocompustar.com'),
-    'url' => env('APP_URL', 'https://quevedmarket-28326787e790.herokuapp.com/'),
+    'url' => env('APP_URL', 'https://quevedmarket.com'),
 
     'asset_url' => env('ASSET_URL', null),
 

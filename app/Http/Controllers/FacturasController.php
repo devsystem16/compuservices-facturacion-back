@@ -277,6 +277,8 @@ class FacturasController extends Controller
             'facturas.cliente_id',
             'facturas.fecha',
             'facturas.subtotal',
+            'facturas.subtotal0',
+            'facturas.subtotal12',
             'facturas.iva',
             'facturas.total',
             'facturas.observacion',
@@ -292,7 +294,10 @@ class FacturasController extends Controller
             ->where('id', $facturas->cliente_id)->first();
 
 
-        $totales =  ["subtotal" => $facturas->subtotal, "iva"  => $facturas->iva, "total" =>  $facturas->total, "observaciones" =>  $facturas->observacion];
+        $totales =  [
+            "subtotal" => $facturas->subtotal,  "subtotal0" =>  $facturas->subtotal0,   "subtotal12" =>  $facturas->subtotal12,
+            "iva"  => $facturas->iva, "total" =>  $facturas->total, "observaciones" =>  $facturas->observacion
+        ];
 
         $detalle = Detalles::select(
             'detalles.id',

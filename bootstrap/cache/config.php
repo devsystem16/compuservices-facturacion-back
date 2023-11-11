@@ -4,8 +4,8 @@
     'name' => 'Laravel',
     'env' => 'test',
     'debug' => true,
-    'url' => 'https://facturacion.grupocompustar.com',
-    'asset_url' => 'https://facturacion.grupocompustar.com',
+    'url' => 'https://quevedmarket.com',
+    'asset_url' => 'https://quevedmarket.com',
     'timezone' => 'America/Guayaquil',
     'locale' => 'en',
     'fallback_locale' => 'en',
@@ -349,7 +349,7 @@
       array (
         'driver' => 'local',
         'root' => 'C:\\laragon-php8\\www\\compuservices-facturacion-back\\storage\\app/public',
-        'url' => 'https://facturacion.grupocompustar.com/storage',
+        'url' => 'https://quevedmarket.com/storage',
         'visibility' => 'public',
       ),
       's3' => 
