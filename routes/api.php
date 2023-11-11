@@ -40,6 +40,8 @@ Route::get('/ordenes/listado/{limite}',  [OrdenesController::class, 'listado']);
 
 Route::get('/productos/listado/{limite}',  [ProductosController::class, 'listado']);
 Route::get('/productos/buscarProducto/{texto?}',  [ProductosController::class, 'buscarProducto']);
+Route::get('/productos/buscarProducto/codigo/{codigoBarras?}',  [ProductosController::class, 'buscarProductoCodigoBarras']);
+
 
 Route::resource('productos', ProductosController::class);
 

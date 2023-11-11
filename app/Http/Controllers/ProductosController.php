@@ -151,6 +151,26 @@ class ProductosController extends Controller
             ->orderBy('created_at', 'desc')
             ->take($limite)->get();
     }
+
+
+    public function buscarProductoCodigoBarras($codigoBarras)
+    {
+        return Productos::select(
+            'id',
+            'nombre',
+            'precio_publico',
+            'precio_tecnico',
+            'precio_compra',
+            'precio_distribuidor',
+            'codigo_barra',
+            'descripcion',
+            'stock',
+            'gravaIva',
+            'pocentaje'
+        )
+            ->where('codigo_barra', '=', $codigoBarras)
+            ->orderBy('nombre', 'asc')->first();
+    }
     public function buscarProducto($texto = '')
     {
         return Productos::select(
