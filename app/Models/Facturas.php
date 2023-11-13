@@ -13,7 +13,10 @@ class Facturas extends Model
 
     protected $table = 'facturas';
     protected $dates = ['deleted_at'];
-    protected $fillable = ['cliente_id', 'fecha', 'subtotal',  'subtotal0', 'subtotal12', 'iva', 'total', 'observacion', 'estado', 'es_credito', 'credito_id', 'periodo_id'];
+    protected $fillable = [
+        'cliente_id', 'fecha', 'subtotal',  'subtotal0', 'subtotal12', 'iva', 'total', 'observacion', 'estado',
+        'es_credito', 'credito_id', 'usuario_id', 'periodo_id'
+    ];
 
     public function detalles()
     {

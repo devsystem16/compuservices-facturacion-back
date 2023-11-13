@@ -172,64 +172,6 @@ class FacturasController extends Controller
     public function historiofacturas(Request $request, $limite)
     {
 
-        // $facturas = Facturas::select(
-        //     'facturas.id',
-        //     'clientes.nombres as cliente',
-        //     'facturas.fecha',
-        //     'facturas.subtotal',
-        //     'facturas.iva',
-        //     'facturas.total',
-        //     'facturas.observacion',
-        //     'facturas.estado'
-        // )
-        //     ->join('clientes', 'clientes.id', '=', 'facturas.cliente_id')
-
-        //     ->orderBy('facturas.created_at', 'desc')
-        //     ->take($limite)
-        //     ->get();
-
-        // $reporte = $facturas->map(function ($factura) {
-        //     $factura->detalles = $factura->detalles;
-        //     return ['factura' => $factura];
-        // });
-
-        // return $reporte;
-
-
-        // $fechaHace10Meses = \Carbon\Carbon::now()->subMonths(3);
-        // $facturas = Facturas::with(['detalles' => function ($query) {
-        //     $query->select(
-        //         'detalles.id',
-        //         'productos.nombre as producto',
-        //         'detalles.cantidad',
-        //         'detalles.subtotal',
-        //         'detalles.precio_tipo'
-        //     )->join('productos', 'productos.id', 'detalles.producto_id');
-        // }])
-        //     ->join('clientes', 'clientes.id', 'facturas.cliente_id')
-        //     // ->whereBetween('facturas.fecha', [$fechaHace10Meses, \Carbon\Carbon::now()])
-        //     ->orderBy('facturas.created_at', 'desc')
-        //     ->take($limite)
-        //     ->get([
-        //         'facturas.id',
-        //         'clientes.nombres as cliente',
-        //         'facturas.fecha',
-        //         'facturas.subtotal',
-        //         'facturas.iva',
-        //         'facturas.total',
-        //         'facturas.observacion',
-        //         'facturas.estado'
-        //     ]);
-
-        // $reporte = $facturas->map(function ($factura) {
-        //     return [
-        //         'factura' => $factura
-        //     ];
-        // })->all();
-        // return    $reporte;
-
-
-
         $reporte = [];
         $facturas =  Facturas::select(
             'facturas.id',
@@ -239,9 +181,13 @@ class FacturasController extends Controller
             'facturas.iva',
             'facturas.total',
             'facturas.observacion',
-            'facturas.estado'
+            'facturas.estado',
+            'usuarios.nombres as nombreUsuario'
         )
             ->join('clientes', 'clientes.id', 'facturas.cliente_id')
+            ->leftJoin('usuarios', 'facturas.usuario_id', 'usuarios.id')
+
+
             ->orderBy('facturas.created_at', 'desc')
             ->take($limite)
             ->get();;
@@ -284,11 +230,20 @@ class FacturasController extends Controller
             'facturas.observacion',
             'facturas.es_credito',
             'facturas.fecha',
-            'facturas.estado'
+            'facturas.estado',
+            'usuarios.nombres as nombreUsuario'
         )
+            ->leftJoin('usuarios', 'facturas.usuario_id', 'usuarios.id')
             ->where('facturas.id', '=', $id)
             ->orderBy('facturas.created_at', 'desc')
             ->first();
+
+
+
+
+
+
+
 
         $cliente =  Clientes::select('cedula', 'nombres', 'telefono', 'direccion')
             ->where('id', $facturas->cliente_id)->first();
@@ -377,9 +332,13 @@ class FacturasController extends Controller
             'facturas.iva',
             'facturas.total',
             'facturas.observacion',
-            'facturas.estado'
+            'facturas.estado',
+            'usuarios.nombres as nombreUsuario'
         )
             ->join('clientes', 'clientes.id', '=', 'facturas.cliente_id')
+            ->leftJoin('usuarios', 'facturas.usuario_id', 'usuarios.id')
+
+
             ->where(function ($query) use ($request) {
                 $searchTerms = explode(' ', $request->filter);
                 foreach ($searchTerms as $term) {
