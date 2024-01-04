@@ -20,19 +20,4 @@ class Retiros extends Model
         'valorRetiro',
         'observacion'
     ];
-
-    // public function usuarioApertura()
-    // {
-    //     return $this->belongsTo(Usuarios::class, 'usuario_id_apertura');
-    // }
-
-    // public function usuarioCierre()
-    // {
-    //     return $this->belongsTo(Usuarios::class, 'usuario_id_cierre');
-    // }
-
-    // public function controlEstacions()
-    // {
-    //     return $this->hasMany(ControlEstacion::class, 'periodo_id');
-    // }
 }

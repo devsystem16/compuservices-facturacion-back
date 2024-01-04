@@ -36,9 +36,16 @@ class PeriodoController extends Controller
 
     public function obtenerRetiros()
     {
+        // $periodoActivo = Periodo::where('estado', 'Abierto')->first();
+        // $sumaValorRetiro = Retiros::where('periodo_id',   $periodoActivo->id)->sum('valorRetiro');
+        // return  ["totalRetiros" => $sumaValorRetiro];
         $periodoActivo = Periodo::where('estado', 'Abierto')->first();
-        $sumaValorRetiro = Retiros::where('periodo_id',   $periodoActivo->id)->sum('valorRetiro');
-        return  ["totalRetiros" => $sumaValorRetiro];
+        if ($periodoActivo) {
+            $sumaValorRetiro = Retiros::where('periodo_id', $periodoActivo->id)->sum('valorRetiro');
+            return ["totalRetiros" => $sumaValorRetiro];
+        } else {
+            return ["totalRetiros" => 0];
+        }
     }
     public function existePeriodoAbierto()
     {

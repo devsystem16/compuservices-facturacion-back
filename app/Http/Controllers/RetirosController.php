@@ -55,8 +55,10 @@ class RetirosController extends Controller
             DB::commit();
             return response()->json(["codigo" => 200, "Message"   => "Retiro creado correctamente.", "data" => $retiros],  200);
         } catch (Exception $e) {
+
+
             DB::rollBack();
-            return response()->json(["codigo" => 400, "Message" => "Error al guardar retiro", "data" => []], 200);
+            return response()->json(["codigo" => 400,   "Message" => "Error al guardar retiro . " . $e->getMessage(), "data" => []], 200);
         }
     }
 
