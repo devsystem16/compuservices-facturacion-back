@@ -281,7 +281,8 @@ class FacturasController extends Controller
             'facturas.observacion',
             'facturas.es_credito',
             'facturas.fecha',
-            'facturas.estado'
+            'facturas.estado',
+            'facturas.impuesto',
         )
             ->where('facturas.id', '=', $id)
             ->orderBy('facturas.created_at', 'desc')
