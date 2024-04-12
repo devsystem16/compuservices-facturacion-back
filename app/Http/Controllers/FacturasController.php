@@ -250,6 +250,7 @@ class FacturasController extends Controller
             $detalle = Detalles::select(
                 'detalles.id',
                 'productos.nombre as producto',
+                'productos.id as idProducto',
                 'detalles.cantidad',
                 'detalles.subtotal',
                 'detalles.precio_tipo'
@@ -300,6 +301,7 @@ class FacturasController extends Controller
             'detalles.cantidad',
             'detalles.subtotal as total',
             'detalles.precio_tipo',
+            'productos.id as idProducto',
             'productos.precio_publico',
             'productos.precio_tecnico',
             'productos.precio_distribuidor'
@@ -391,7 +393,7 @@ class FacturasController extends Controller
         $reporte = $facturas->map(function ($factura) {
             $detalles = DB::table('detalles')
                 ->join('productos', 'productos.id', '=', 'detalles.producto_id')
-                ->select('detalles.*', 'productos.nombre as producto')
+                ->select('detalles.*', 'productos.nombre as producto', 'productos.id as idProducto')
                 ->where('detalles.factura_id', $factura->id)
                 ->get();
 
