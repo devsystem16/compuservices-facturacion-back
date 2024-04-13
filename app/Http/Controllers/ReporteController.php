@@ -370,7 +370,8 @@ class ReporteController extends Controller
             ->selectRaw("'Factura' as tipo")
             ->join('clientes', 'clientes.id', 'facturas.cliente_id')
             ->orderBy('facturas.created_at', 'desc')
-            ->whereBetween('facturas.fecha', [$request->fecha_desde, $request->fecha_hasta])
+            ->whereRaw("DATE_FORMAT(facturas.fecha, '%Y-%m-%d') BETWEEN ? AND ?", [$request->fecha_desde, $request->fecha_hasta])
+            // ->whereBetween('facturas.fecha', [$request->fecha_desde, $request->fecha_hasta])
             ->where('facturas.estado', '=',  'cerrada')
             // ->orWhere('facturas.id', 'LIKE', '%' . $request->filter . '%')
             ->get();
