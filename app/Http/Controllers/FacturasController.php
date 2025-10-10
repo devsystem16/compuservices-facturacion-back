@@ -171,65 +171,6 @@ class FacturasController extends Controller
 
     public function historiofacturas(Request $request, $limite)
     {
-
-        // $facturas = Facturas::select(
-        //     'facturas.id',
-        //     'clientes.nombres as cliente',
-        //     'facturas.fecha',
-        //     'facturas.subtotal',
-        //     'facturas.iva',
-        //     'facturas.total',
-        //     'facturas.observacion',
-        //     'facturas.estado'
-        // )
-        //     ->join('clientes', 'clientes.id', '=', 'facturas.cliente_id')
-
-        //     ->orderBy('facturas.created_at', 'desc')
-        //     ->take($limite)
-        //     ->get();
-
-        // $reporte = $facturas->map(function ($factura) {
-        //     $factura->detalles = $factura->detalles;
-        //     return ['factura' => $factura];
-        // });
-
-        // return $reporte;
-
-
-        // $fechaHace10Meses = \Carbon\Carbon::now()->subMonths(3);
-        // $facturas = Facturas::with(['detalles' => function ($query) {
-        //     $query->select(
-        //         'detalles.id',
-        //         'productos.nombre as producto',
-        //         'detalles.cantidad',
-        //         'detalles.subtotal',
-        //         'detalles.precio_tipo'
-        //     )->join('productos', 'productos.id', 'detalles.producto_id');
-        // }])
-        //     ->join('clientes', 'clientes.id', 'facturas.cliente_id')
-        //     // ->whereBetween('facturas.fecha', [$fechaHace10Meses, \Carbon\Carbon::now()])
-        //     ->orderBy('facturas.created_at', 'desc')
-        //     ->take($limite)
-        //     ->get([
-        //         'facturas.id',
-        //         'clientes.nombres as cliente',
-        //         'facturas.fecha',
-        //         'facturas.subtotal',
-        //         'facturas.iva',
-        //         'facturas.total',
-        //         'facturas.observacion',
-        //         'facturas.estado'
-        //     ]);
-
-        // $reporte = $facturas->map(function ($factura) {
-        //     return [
-        //         'factura' => $factura
-        //     ];
-        // })->all();
-        // return    $reporte;
-
-
-
         $reporte = [];
         $facturas =  Facturas::select(
             'facturas.id',
@@ -260,6 +201,20 @@ class FacturasController extends Controller
 
                 ->get();
             $factura->detalles =  $detalle;
+
+
+
+                $formasPagoFactura = DB::table('forma_pago_facturas')
+                ->join('forma_pagos', 'forma_pagos.id', '=', 'forma_pago_facturas.forma_pago_id')
+                ->select('forma_pago_facturas.*', 'forma_pagos.label as descripcionFormaPago')
+                ->where('forma_pago_facturas.factura_id', $factura->id)
+                ->get();
+
+            $factura->formasPago = $formasPagoFactura;
+
+
+
+
             array_push($reporte, [
                 'factura' => $factura
             ]);
@@ -382,7 +337,9 @@ class FacturasController extends Controller
                 foreach ($searchTerms as $term) {
                     $query->where(function ($query) use ($term) {
                         $query->where('clientes.nombres', 'LIKE', '%' . $term . '%')
-                            ->orWhere('facturas.id', 'LIKE', '%' . $term . '%');
+                            ->orWhere('facturas.id', 'LIKE', '%' . $term . '%')
+                             ->orWhere('clientes.cedula', 'LIKE', '%' . $term . '%')
+                            ;
                     });
                 }
             })
@@ -391,6 +348,8 @@ class FacturasController extends Controller
             ->get();
 
         $reporte = $facturas->map(function ($factura) {
+
+
             $detalles = DB::table('detalles')
                 ->join('productos', 'productos.id', '=', 'detalles.producto_id')
                 ->select('detalles.*', 'productos.nombre as producto', 'productos.id as idProducto')
@@ -398,7 +357,20 @@ class FacturasController extends Controller
                 ->get();
 
             $factura->detalles = $detalles;
+
+
+          $formasPagoFactura = DB::table('forma_pago_facturas')
+                ->join('forma_pagos', 'forma_pagos.id', '=', 'forma_pago_facturas.forma_pago_id')
+                ->select('forma_pago_facturas.*', 'forma_pagos.label as descripcionFormaPago')
+                ->where('forma_pago_facturas.factura_id', $factura->id)
+                ->get();
+
+            $factura->formasPago = $formasPagoFactura;
+
             return ['factura' => $factura];
+
+
+
         });
 
         return $reporte;
@@ -435,80 +407,14 @@ class FacturasController extends Controller
         });
 
         return $reporte;
-
-        // $facturas = Facturas::select(
-        //     'facturas.id',
-        //     'clientes.nombres as cliente',
-        //     'facturas.fecha',
-        //     'facturas.subtotal',
-        //     'facturas.iva',
-        //     'facturas.total',
-        //     'facturas.observacion',
-        //     'facturas.estado'
-        // )
-        //     ->join('clientes', 'clientes.id', '=', 'facturas.cliente_id')
-        //     ->where(function ($query) use ($request) {
-        //         $query->where('clientes.nombres', 'LIKE', '%' . $request->filter . '%')
-        //             ->orWhere('facturas.id', 'LIKE', '%' . $request->filter . '%');
-        //     })
-        //     ->orderBy('facturas.created_at', 'desc')
-        //     ->take($request->limite)
-        //     ->get();
-
-        // $reporte = $facturas->map(function ($factura) {
-        //     $factura->detalles = $factura->detalles;
-        //     return ['factura' => $factura];
-        // });
-
-        // return $reporte;
-
-
-
-
-        // $reporte = [];
-        // $facturas =  Facturas::select(
-        //     'facturas.id',
-        //     'clientes.nombres as cliente',
-        //     'facturas.fecha',
-        //     'facturas.subtotal',
-        //     'facturas.iva',
-        //     'facturas.total',
-        //     'facturas.observacion',
-        //     'facturas.estado'
-        // )
-        //     ->join('clientes', 'clientes.id', 'facturas.cliente_id')
-        //     ->orderBy('facturas.created_at', 'desc')
-
-        //     ->where('clientes.nombres', 'LIKE', '%' . $request->filter . '%')
-        //     ->orWhere('facturas.id', 'LIKE', '%' . $request->filter . '%')
-        //     ->get();
-
-        // foreach ($facturas as $factura) {
-        //     $detalle = Detalles::select(
-        //         'detalles.id',
-        //         'productos.nombre as producto',
-        //         'detalles.cantidad',
-        //         'detalles.subtotal',
-        //         'detalles.precio_tipo'
-        //     )
-        //         ->join('productos', 'productos.id', 'detalles.producto_id')
-        //         ->where('factura_id', $factura->id)->get();
-        //     $factura->detalles =  $detalle;
-        //     array_push($reporte, [
-        //         'factura' => $factura
-        //     ]);
-        // }
-        // return   $reporte;
     }
-
-
-
+ 
 
     public function reporteDiario()
     {
-        $reporteDiario =  DB::select(' call reporteDiario();');
+        $reporteDiario =   DB::select(' call reporteDiario();');
 
-
+ 
 
 
         // $facturas = Facturas::select('facturas.id', 'facturas.observacion', 'detalles.cantidad', 'detalles.subtotal',  'productos.nombre as producto', 'detalles.precio_tipo',)
