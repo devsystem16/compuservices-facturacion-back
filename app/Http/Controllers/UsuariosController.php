@@ -84,14 +84,10 @@ class UsuariosController extends Controller
     {
         //
     }
+ 
 
     public function login(Request $request)
     {
-
-
-
-
-
         $acceso = [
             "login" => 0,
             "user_id" => 0,

@@ -18,4 +18,22 @@ class Ordenes extends Model
         'serie', 'falla', 'trabajo', 'total', 'saldo', 'abono', 'observacion', 'camara', 'teclado',
         'microfono', 'parlantes', 'estado', 'estadoOrden', 'last_user_update', 'user_update_work', 'factura_relacionada', 'periodo_id'
     ];
+
+
+    public function cliente()
+{
+    return $this->belongsTo(Clientes::class, 'cliente_id', 'id');
+}
+
+public function usuarioTrabajo()
+{
+    return $this->belongsTo(Usuarios::class, 'user_update_work', 'id');
+}
+
+public function usuarioUltimaActualizacion()
+{
+    return $this->belongsTo(Usuarios::class, 'last_user_update', 'id');
+}
+
+
 }

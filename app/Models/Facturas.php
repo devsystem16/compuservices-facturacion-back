@@ -24,4 +24,16 @@ class Facturas extends Model
     {
         return $this->hasMany(FormaPagoFactura::class, 'factura_id', 'id');
     }
+
+     public function credito()
+        {
+            return $this->belongsTo(Creditos::class, 'credito_id', 'id');
+        }
+
+ 
+public function cliente()
+{
+    return $this->belongsTo(Clientes::class, 'cliente_id', 'id');
+}
+
 }

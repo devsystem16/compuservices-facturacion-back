@@ -20,4 +20,21 @@ class Creditos extends Model
     {
         return $this->hasMany(DetalleCreditos::class, 'credito_id', 'id');
     }
+
+         public function cliente()
+        {
+            return $this->belongsTo(Clientes::class);
+        }
+
+        public function detalles()
+        {
+            return $this->hasMany(DetalleCreditos::class, 'credito_id');
+        }
+
+        public function factura()
+        {
+           return $this->hasOne(Facturas::class, 'credito_id', 'id');
+        }
+
+
 }

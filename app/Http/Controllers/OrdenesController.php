@@ -15,24 +15,73 @@ class OrdenesController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
+    // public function index()
+    // {
+
+
+    //     $ordenes = Ordenes::select('ordenes.*', 'clientes.nombres as cliente', 'usu.nombres as update_work',  'usu1.nombres as last_user')
+    //         ->join('clientes', 'ordenes.cliente_id', 'clientes.id')
+    //         ->join('usuarios as usu', 'ordenes.user_update_work', 'usu.id')
+    //         ->join('usuarios as usu1', 'ordenes.last_user_update', 'usu1.id')
+    //         ->orderBy('ordenes.fecha', 'desc')
+    //         ->orderBy('ordenes.id', 'desc')
+    //         ->where('ordenes.estado', '=', 1)
+    //         ->get();
+
+    //     return    $ordenes;
+    // }
+
+
     public function index()
-    {
+{
+    $ordenes = Ordenes::select(
+            'ordenes.id',
+            'ordenes.cliente_id',
+            'ordenes.usuario_id',
+            'ordenes.fecha',
+            'ordenes.equipo',
+            'ordenes.marca',
+            'ordenes.modelo',
+            'ordenes.serie',
+            'ordenes.falla',
+            'ordenes.trabajo',
+            'ordenes.total',
+            'ordenes.saldo',
+            'ordenes.abono',
+            'ordenes.observacion',
+            'ordenes.camara',
+            'ordenes.teclado',
+            'ordenes.microfono',
+            'ordenes.parlantes',
+            'ordenes.estado',
+            'ordenes.estadoOrden',
+            'ordenes.last_user_update',
+            'ordenes.user_update_work',
+            'ordenes.factura_relacionada',
+            'ordenes.periodo_id',
+            'ordenes.created_at',
+            'ordenes.updated_at',
+            'ordenes.deleted_at',
+            'clientes.nombres as cliente',
+            'usu.nombres as update_work',
+            'usu1.nombres as last_user'
+        )
+        ->join('clientes', 'ordenes.cliente_id', '=', 'clientes.id')
+        ->leftJoin('usuarios as usu', 'ordenes.user_update_work', '=', 'usu.id')
+        ->leftJoin('usuarios as usu1', 'ordenes.last_user_update', '=', 'usu1.id')
+        ->where('ordenes.estado', '=', 1)
+        ->where('ordenes.fecha', '>=', '2024-10-10 09:53:34') // 👈 filtro agregado
+        ->orderBy('ordenes.fecha', 'desc')
+        ->orderBy('ordenes.id', 'desc')
+        ->get();
+
+    return $ordenes;
+}
 
 
-        $ordenes = Ordenes::select('ordenes.*', 'clientes.nombres as cliente', 'usu.nombres as update_work',  'usu1.nombres as last_user')
-            ->join('clientes', 'ordenes.cliente_id', 'clientes.id')
-            ->join('usuarios as usu', 'ordenes.user_update_work', 'usu.id')
-            ->join('usuarios as usu1', 'ordenes.last_user_update', 'usu1.id')
-            ->orderBy('ordenes.fecha', 'desc')
-            ->orderBy('ordenes.id', 'desc')
-            ->where('ordenes.estado', '=', 1)
-            ->get();
 
-        return    $ordenes;
-        // return Ordenes::orderBy('updated_at', 'desc')
-        //     ->where('estado', '=', 1)
-        //     ->get();
-    }
+
+
 
     /**
      * Show the form for creating a new resource.

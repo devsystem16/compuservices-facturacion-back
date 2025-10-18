@@ -188,35 +188,16 @@ class CreditosController extends Controller
         return   ["totalCredito"  =>  $credito->total, "totalPagado" => $valorMasAbono, "saldo" => $saldo, "cambio" =>  $cambio];
     }
 
-    public function ListadoCreditos()
-    {
-
-        $creditos = Creditos::select(
-            'creditos.id as id',
-            'creditos.cliente_id',
-            'creditos.fecha',
-            'creditos.detalle',
-            'creditos.saldo',
-            'creditos.total',
-            'clientes.nombres as cliente',
-            'clientes.telefono as telefono'
-        )
-            ->join('clientes', 'creditos.cliente_id', 'clientes.id')
-            ->where('creditos.saldo', '>', 0)
-            ->whereNull('creditos.deleted_at')
-            ->orderBy('creditos.updated_at', 'desc')
-            ->orderBy('creditos.fecha', 'desc')
-            ->get();
-
-
-        $collection = collect([]);
-
-        foreach ($creditos as $credito) {
-
-            $detalles =   DetalleCreditos::where('credito_id', $credito->id)->get();
-            $factura =  Facturas::select(
+ public function ListadoCreditos()
+{
+    $creditos = Creditos::with([
+        'cliente:id,nombres,telefono',
+        'detalles.formaPago:id,label',
+        'factura' => function ($query) {
+            $query->select(
                 'facturas.id',
-                'clientes.nombres as cliente',
+                'facturas.credito_id',
+                'facturas.cliente_id',
                 'facturas.fecha',
                 'facturas.subtotal',
                 'facturas.iva',
@@ -224,64 +205,177 @@ class CreditosController extends Controller
                 'facturas.observacion',
                 'facturas.estado'
             )
-                ->join('clientes', 'clientes.id', 'facturas.cliente_id')
-                ->orderBy('facturas.created_at', 'desc')
-                ->where('facturas.credito_id', '=', $credito->id)
-                ->get();
-
-
-            $pagos = DetalleCreditos::select(
-                'detalle_creditos.id',
-                'detalle_creditos.fecha',
-                'detalle_creditos.abono',
-                'detalle_creditos.comentario',
-                'forma_pagos.label as forma_pago'
-            )
-                ->join('creditos', 'creditos.id', 'detalle_creditos.credito_id')
-                ->Leftjoin('forma_pagos', 'forma_pagos.id', 'detalle_creditos.forma_pago_id')
-                ->where('creditos.id', '=', $credito->id)
-                ->get();
-
-
-
-            $detalle = [];
-
-            foreach ($factura as $fac) {
-                $detalle = Detalles::select(
+            // 👉 aquí incluimos la relación con el cliente
+            ->with(['cliente:id,nombres,telefono'])
+            ->with(['detalles' => function ($q) {
+                $q->select(
                     'detalles.id',
+                    'detalles.factura_id',
                     'productos.nombre as producto',
                     'detalles.cantidad',
                     'detalles.subtotal',
                     'detalles.precio_tipo'
                 )
-                    ->join('productos', 'productos.id', 'detalles.producto_id')
-                    ->where('factura_id', $fac->id)->get();
-                $fac->detalles =  $detalle;
-            }
-
-
-
-
-            $abonado = 0;
-            foreach ($detalles as $detalle) {
-                $abonado =   $abonado + $detalle->abono;
-            }
-            $collection->push([
-                "id" => $credito->id,
-                "cliente" => $credito->cliente,
-                "telefono" => $credito->telefono,
-                "fecha" => $credito->fecha,
-                "detalle" => $credito->detalle,
-                "saldo" => $credito->saldo,
-                "total" => $credito->total,
-                "abono" => $abonado,
-                "pagos" => $pagos,
-                "factura" => isset($factura[0]) ? $factura[0] : null
-
-            ]);
+                ->join('productos', 'productos.id', '=', 'detalles.producto_id');
+            }]);
         }
-        return   $collection;
-    }
+    ])
+    ->select(
+        'creditos.id',
+        'creditos.cliente_id',
+        'creditos.fecha',
+        'creditos.detalle',
+        'creditos.saldo',
+        'creditos.total'
+    )
+    ->where('creditos.saldo', '>', 0)
+    ->whereNull('creditos.deleted_at')
+    ->orderBy('creditos.updated_at', 'desc')
+    ->orderBy('creditos.fecha', 'desc')
+    ->get();
+
+    // Calcular los abonos por crédito
+    $detallesAbonos = DetalleCreditos::select('credito_id', \DB::raw('SUM(abono) as total_abono'))
+        ->groupBy('credito_id')
+        ->pluck('total_abono', 'credito_id');
+
+    // Construir el resultado
+    $resultado = $creditos->map(function ($credito) use ($detallesAbonos) {
+        return [
+            'id'       => $credito->id,
+            'cliente'  => $credito->cliente->nombres ?? null,
+            'telefono' => $credito->cliente->telefono ?? null,
+            'fecha'    => $credito->fecha,
+            'detalle'  => $credito->detalle,
+            'saldo'    => $credito->saldo,
+            'total'    => $credito->total,
+            'abono'    => $detallesAbonos[$credito->id] ?? 0,
+            'pagos'    => $credito->detalles->map(fn($pago) => [
+                'id'         => $pago->id,
+                'fecha'      => $pago->fecha,
+                'abono'      => $pago->abono,
+                'comentario' => $pago->comentario,
+                'forma_pago' => $pago->formaPago->label ?? null,
+            ]),
+            // 👉 factura con cliente incluido
+            'factura'  => $credito->factura ? [
+                'id'          => $credito->factura->id,
+                'cliente'     => $credito->factura->cliente->nombres ?? null,
+                'telefono'    => $credito->factura->cliente->telefono ?? null,
+                'fecha'       => $credito->factura->fecha,
+                'subtotal'    => $credito->factura->subtotal,
+                'iva'         => $credito->factura->iva,
+                'total'       => $credito->factura->total,
+                'observacion' => $credito->factura->observacion,
+                'estado'      => $credito->factura->estado,
+                'detalles'    => $credito->factura->detalles,
+            ] : null,
+        ];
+    });
+
+    return $resultado;
+}
+
+
+ 
+    // public function ListadoCreditos()
+    // {
+
+    //     $creditos = Creditos::select(
+    //         'creditos.id as id',
+    //         'creditos.cliente_id',
+    //         'creditos.fecha',
+    //         'creditos.detalle',
+    //         'creditos.saldo',
+    //         'creditos.total',
+    //         'clientes.nombres as cliente',
+    //         'clientes.telefono as telefono'
+    //     )
+    //         ->join('clientes', 'creditos.cliente_id', 'clientes.id')
+    //         ->where('creditos.saldo', '>', 0)
+    //         ->whereNull('creditos.deleted_at')
+    //         ->orderBy('creditos.updated_at', 'desc')
+    //         ->orderBy('creditos.fecha', 'desc')
+    //         ->get();
+
+
+    //     $collection = collect([]);
+
+    //     foreach ($creditos as $credito) {
+
+    //         $detalles =   DetalleCreditos::where('credito_id', $credito->id)->get();
+    //         $factura =  Facturas::select(
+    //             'facturas.id',
+    //             'clientes.nombres as cliente',
+    //             'facturas.fecha',
+    //             'facturas.subtotal',
+    //             'facturas.iva',
+    //             'facturas.total',
+    //             'facturas.observacion',
+    //             'facturas.estado'
+    //         )
+    //             ->join('clientes', 'clientes.id', 'facturas.cliente_id')
+    //             ->orderBy('facturas.created_at', 'desc')
+    //             ->where('facturas.credito_id', '=', $credito->id)
+    //             ->get();
+
+
+    //         $pagos = DetalleCreditos::select(
+    //             'detalle_creditos.id',
+    //             'detalle_creditos.fecha',
+    //             'detalle_creditos.abono',
+    //             'detalle_creditos.comentario',
+    //             'forma_pagos.label as forma_pago'
+    //         )
+    //             ->join('creditos', 'creditos.id', 'detalle_creditos.credito_id')
+    //             ->Leftjoin('forma_pagos', 'forma_pagos.id', 'detalle_creditos.forma_pago_id')
+    //             ->where('creditos.id', '=', $credito->id)
+    //             ->get();
+
+
+
+    //         $detalle = [];
+
+    //         foreach ($factura as $fac) {
+    //             $detalle = Detalles::select(
+    //                 'detalles.id',
+    //                 'productos.nombre as producto',
+    //                 'detalles.cantidad',
+    //                 'detalles.subtotal',
+    //                 'detalles.precio_tipo'
+    //             )
+    //                 ->join('productos', 'productos.id', 'detalles.producto_id')
+    //                 ->where('factura_id', $fac->id)->get();
+    //             $fac->detalles =  $detalle;
+    //         }
+
+
+
+
+    //         $abonado = 0;
+    //         foreach ($detalles as $detalle) {
+    //             $abonado =   $abonado + $detalle->abono;
+    //         }
+    //         $collection->push([
+    //             "id" => $credito->id,
+    //             "cliente" => $credito->cliente,
+    //             "telefono" => $credito->telefono,
+    //             "fecha" => $credito->fecha,
+    //             "detalle" => $credito->detalle,
+    //             "saldo" => $credito->saldo,
+    //             "total" => $credito->total,
+    //             "abono" => $abonado,
+    //             "pagos" => $pagos,
+    //             "factura" => isset($factura[0]) ? $factura[0] : null
+
+    //         ]);
+    //     }
+    //     return   $collection;
+    // }
+
+ 
+
+
     /**
      * Display the specified resource.
      *

@@ -126,4 +126,80 @@ class ProformaController extends Controller
     public function destroy(Proforma $proforma)
     {
     }
+
+ public function obtenerProforma(Request $request)
+{
+    try {
+        $id = $request->input('idProforma');
+
+          // Carga relaciones: cliente y detalles con producto
+        $proforma = Proforma::with([
+            'cliente',
+            'detallesProforma.producto'
+        ])->findOrFail($id);
+
+
+        return       $proforma ;
+
+        
+        if (!$id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'El campo idProforma es obligatorio.'
+            ], 400);
+        }
+
+      
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'id' => $proforma->id,
+                'fecha_emision' => $proforma->fecha_emision,
+                'fecha_vencimiento' => $proforma->fecha_vencimiento,
+                'estado' => $proforma->estado,
+                'observacion' => $proforma->observacion,
+                'subtotal' => $proforma->subtotal,
+                'iva' => $proforma->iva,
+                'total' => $proforma->total,
+                'cliente' => [
+                    'id' => $proforma->cliente->id ?? null,
+                    'cedula' => $proforma->cliente->cedula ?? null,
+                    'nombres' => $proforma->cliente->nombres ?? null,
+                    'telefono' => $proforma->cliente->telefono ?? null,
+                    'direccion' => $proforma->cliente->direccion ?? null,
+                    'correo' => $proforma->cliente->correo ?? null,
+                    'observacion' => $proforma->cliente->observacion ?? null,
+                ],
+                'detalles' => $proforma->detallesProforma->map(function ($detalle) {
+                    return [
+                        'id' => $detalle->id,
+                        'producto_id' => $detalle->producto_id,
+                        'nombre_producto' => $detalle->producto->nombre ?? '(No encontrado)',
+                        'descripcion' => $detalle->producto->descripcion ?? null,
+                        'cantidad' => $detalle->cantidad,
+                        'precio_unitario' => $detalle->precio_tipo,
+                        'subtotal' => $detalle->subtotal,
+                        'total' => $detalle->cantidad * $detalle->precio_tipo,
+                    ];
+                }),
+            ],
+        ], 200);
+
+    } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Proforma no encontrada.'
+        ], 404);
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Error al obtener la proforma.',
+            'error' => $e->getMessage(),
+        ], 500);
+    }
+}
+
+
+
 }

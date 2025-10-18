@@ -20,4 +20,5 @@ class DetalleCreditos extends Model
     {
         return $this->belongsTo(FormaPago::class,  'forma_pago_id');
     }
+ 
 }

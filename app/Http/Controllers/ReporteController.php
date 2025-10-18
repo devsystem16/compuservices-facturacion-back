@@ -360,21 +360,53 @@ class ReporteController extends Controller
         $total_ventas = 0;
 
 
-        $facturas =  Facturas::select(
-            'facturas.id  as idControl',
-            'facturas.fecha',
-            'clientes.nombres as cliente',
-            'facturas.observacion',
-            'facturas.total as totalAbono',
-        )
-            ->selectRaw("'Factura' as tipo")
-            ->join('clientes', 'clientes.id', 'facturas.cliente_id')
-            ->orderBy('facturas.created_at', 'desc')
-            ->whereRaw("DATE_FORMAT(facturas.fecha, '%Y-%m-%d') BETWEEN ? AND ?", [$request->fecha_desde, $request->fecha_hasta])
-            // ->whereBetween('facturas.fecha', [$request->fecha_desde, $request->fecha_hasta])
-            ->where('facturas.estado', '=',  'cerrada')
-            // ->orWhere('facturas.id', 'LIKE', '%' . $request->filter . '%')
-            ->get();
+
+       $facturas = Facturas::select(
+    'facturas.id as idControl',
+    'facturas.fecha',
+    'clientes.nombres as cliente',
+    'facturas.observacion',
+    'facturas.total as totalAbono',
+    \DB::raw("GROUP_CONCAT(CONCAT(forma_pagos.label, ' ($', forma_pago_facturas.valor, ')') SEPARATOR ', ') as formasPagos")
+)
+->selectRaw("'Factura' as tipo")
+->join('clientes', 'clientes.id', 'facturas.cliente_id')
+->join('forma_pago_facturas', 'forma_pago_facturas.factura_id', 'facturas.id')
+->join('forma_pagos', 'forma_pagos.id', 'forma_pago_facturas.forma_pago_id')
+->where('facturas.estado', 'cerrada')
+->whereBetween(\DB::raw("DATE(facturas.fecha)"), [$request->fecha_desde, $request->fecha_hasta])
+->groupBy('facturas.id', 'facturas.fecha', 'clientes.nombres', 'facturas.observacion', 'facturas.total')
+->orderBy('facturas.created_at', 'desc')
+->get();
+
+
+
+
+        // $facturas =  Facturas::select(
+        //     'facturas.id  as idControl',
+        //     'facturas.fecha',
+        //     'clientes.nombres as cliente',
+        //     'facturas.observacion',
+        //     'facturas.total as totalAbono',
+        //     'forma_pagos.label as formaPago',
+        // )
+        //     ->selectRaw("'Factura' as tipo")
+        //     ->join('clientes', 'clientes.id', 'facturas.cliente_id')
+           
+        //     ->join('forma_pago_facturas', 'forma_pago_facturas.factura_id', 'facturas.id')
+        //     ->join('forma_pagos', 'forma_pagos.id', 'forma_pago_facturas.forma_pago_id')
+
+        //     ->orderBy('facturas.created_at', 'desc')
+        //     ->whereRaw("DATE_FORMAT(facturas.fecha, '%Y-%m-%d') BETWEEN ? AND ?", [$request->fecha_desde, $request->fecha_hasta])
+          
+        //     ->where('facturas.estado', '=',  'cerrada')
+    
+        //     ->get();
+
+
+
+
+
         $ordenes =  Ordenes::select(
             'ordenes.id as idControl',
             'ordenes.fecha as fecha',
@@ -388,6 +420,7 @@ class ReporteController extends Controller
             ->join('clientes', 'clientes.id', 'ordenes.cliente_id')
             ->where('ordenes.estado', '=',  '1')
             ->groupBy('abono_ordenes.orden_id')
+            ->orderBy('ordenes.fecha', 'desc')
             ->get();
 
 
@@ -404,6 +437,8 @@ class ReporteController extends Controller
             ->whereBetween('detalle_creditos.fecha', [$request->fecha_desde, $request->fecha_hasta])
 
             ->groupBy('detalle_creditos.credito_id')
+
+            ->orderBy('creditos.fecha', 'desc')
             ->get();
 
 
