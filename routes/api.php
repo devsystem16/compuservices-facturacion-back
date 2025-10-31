@@ -7,6 +7,7 @@ use App\Http\Controllers\CreditosController;
 use App\Http\Controllers\FacturasController;
 use App\Http\Controllers\FormaPagoController;
 use App\Http\Controllers\PantallaposController;
+use App\Http\Controllers\DetalleCreditosController;
 use App\Http\Controllers\PeriodoController;
 use App\Http\Controllers\ProformaController;
 use App\Http\Controllers\TecnicoController;
@@ -63,6 +64,12 @@ Route::post('/facturas/anulacion/nota-credito',  [FacturasController::class, 'an
 Route::post('/creditos/abonar',  [CreditosController::class, 'abonar']);
 Route::get('/creditos/lista/listado',  [CreditosController::class, 'ListadoCreditos']);
 Route::post('/creditos/eliminar/{idCredito}',  [CreditosController::class, 'eliminarCredito']);
+
+Route::put('/detalle-creditos/{id}/forma-pago', [DetalleCreditosController::class, 'actualizarFormaPago']);
+
+
+
+
 
 Route::get('/facturas/impresion/reimpresion/{id}',  [FacturasController::class, 'reimpresion']);
 

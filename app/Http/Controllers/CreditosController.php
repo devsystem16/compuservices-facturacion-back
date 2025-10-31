@@ -140,6 +140,9 @@ class CreditosController extends Controller
             return response()->json(["codigo" => 400, "Message" => "Error al eliminar"], 400);
         }
     }
+
+
+    
     public function abonar(Request $request)
     {
 
@@ -256,6 +259,7 @@ class CreditosController extends Controller
                 'abono'      => $pago->abono,
                 'comentario' => $pago->comentario,
                 'forma_pago' => $pago->formaPago->label ?? null,
+                'forma_pago_id' => $pago->formaPago->id ?? null,
             ]),
             // 👉 factura con cliente incluido
             'factura'  => $credito->factura ? [
@@ -278,102 +282,7 @@ class CreditosController extends Controller
 
 
  
-    // public function ListadoCreditos()
-    // {
-
-    //     $creditos = Creditos::select(
-    //         'creditos.id as id',
-    //         'creditos.cliente_id',
-    //         'creditos.fecha',
-    //         'creditos.detalle',
-    //         'creditos.saldo',
-    //         'creditos.total',
-    //         'clientes.nombres as cliente',
-    //         'clientes.telefono as telefono'
-    //     )
-    //         ->join('clientes', 'creditos.cliente_id', 'clientes.id')
-    //         ->where('creditos.saldo', '>', 0)
-    //         ->whereNull('creditos.deleted_at')
-    //         ->orderBy('creditos.updated_at', 'desc')
-    //         ->orderBy('creditos.fecha', 'desc')
-    //         ->get();
-
-
-    //     $collection = collect([]);
-
-    //     foreach ($creditos as $credito) {
-
-    //         $detalles =   DetalleCreditos::where('credito_id', $credito->id)->get();
-    //         $factura =  Facturas::select(
-    //             'facturas.id',
-    //             'clientes.nombres as cliente',
-    //             'facturas.fecha',
-    //             'facturas.subtotal',
-    //             'facturas.iva',
-    //             'facturas.total',
-    //             'facturas.observacion',
-    //             'facturas.estado'
-    //         )
-    //             ->join('clientes', 'clientes.id', 'facturas.cliente_id')
-    //             ->orderBy('facturas.created_at', 'desc')
-    //             ->where('facturas.credito_id', '=', $credito->id)
-    //             ->get();
-
-
-    //         $pagos = DetalleCreditos::select(
-    //             'detalle_creditos.id',
-    //             'detalle_creditos.fecha',
-    //             'detalle_creditos.abono',
-    //             'detalle_creditos.comentario',
-    //             'forma_pagos.label as forma_pago'
-    //         )
-    //             ->join('creditos', 'creditos.id', 'detalle_creditos.credito_id')
-    //             ->Leftjoin('forma_pagos', 'forma_pagos.id', 'detalle_creditos.forma_pago_id')
-    //             ->where('creditos.id', '=', $credito->id)
-    //             ->get();
-
-
-
-    //         $detalle = [];
-
-    //         foreach ($factura as $fac) {
-    //             $detalle = Detalles::select(
-    //                 'detalles.id',
-    //                 'productos.nombre as producto',
-    //                 'detalles.cantidad',
-    //                 'detalles.subtotal',
-    //                 'detalles.precio_tipo'
-    //             )
-    //                 ->join('productos', 'productos.id', 'detalles.producto_id')
-    //                 ->where('factura_id', $fac->id)->get();
-    //             $fac->detalles =  $detalle;
-    //         }
-
-
-
-
-    //         $abonado = 0;
-    //         foreach ($detalles as $detalle) {
-    //             $abonado =   $abonado + $detalle->abono;
-    //         }
-    //         $collection->push([
-    //             "id" => $credito->id,
-    //             "cliente" => $credito->cliente,
-    //             "telefono" => $credito->telefono,
-    //             "fecha" => $credito->fecha,
-    //             "detalle" => $credito->detalle,
-    //             "saldo" => $credito->saldo,
-    //             "total" => $credito->total,
-    //             "abono" => $abonado,
-    //             "pagos" => $pagos,
-    //             "factura" => isset($factura[0]) ? $factura[0] : null
-
-    //         ]);
-    //     }
-    //     return   $collection;
-    // }
-
- 
+  
 
 
     /**

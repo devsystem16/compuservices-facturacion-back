@@ -83,4 +83,25 @@ class DetalleCreditosController extends Controller
     {
         DetalleCreditos::findOrFail($id)->delete();
     }
+
+    public function actualizarFormaPago(Request $request, $id)
+    {
+        $request->validate([
+            'forma_pago_id' => 'required|integer|exists:forma_pagos,id',
+        ]);
+
+        $detalle = DetalleCreditos::findOrFail($id);
+        $detalle->forma_pago_id = $request->forma_pago_id;
+        $detalle->save();
+
+        // Puedes devolver también el objeto completo con la relación
+        return response()->json([
+            'message' => 'Forma de pago actualizada correctamente',
+            'detalle' => $detalle->load('FormaPago')
+        ]);
+    }
+
+
+
+
 }
