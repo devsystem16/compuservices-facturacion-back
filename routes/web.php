@@ -13,36 +13,8 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-
-
-Route::get('/', function () {
+// Catch-all: any route that is NOT /api/* will serve the React SPA.
+// React Router handles client-side routing from here.
+Route::get('/{any}', function () {
     return view('welcome');
-});
-
-Route::get('/pepe', function () {
-    return "hola";
-});
-
-
-Route::get('/login', function () {
-    return view('welcome');
-});
-
-Route::get('public/login', function () {
-    return view('welcome');
-});
-
-Route::get('public/app/login', function () {
-    return view('welcome');
-});
-Route::get('/public/app/login', function () {
-    return view('welcome');
-});
-
-
-// Route::get('/app/dashboard', function () {
-//     return view('welcome');
-// });
-
-
-Route::view("/app/{path?}", "welcome");
+})->where('any', '^(?!api).*$');
