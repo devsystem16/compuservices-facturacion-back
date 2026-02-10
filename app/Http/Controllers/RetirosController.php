@@ -20,9 +20,9 @@ class RetirosController extends Controller
         try {
             DB::beginTransaction();
             $periodoActivo = Periodo::where('estado', 'Abierto')->first();
-            $retiros = Retiros::where('periodo_id',  $periodoActivo->id)->get();
+            $retiros = Retiros::where('periodo_id', $periodoActivo->id)->get();
             DB::commit();
-            return response()->json(["codigo" => 200, "Message" => "",  "data" => $retiros],  200);
+            return response()->json(["codigo" => 200, "Message" => "", "data" => $retiros], 200);
         } catch (Exception $e) {
             DB::rollBack();
             return response()->json(["codigo" => 400, "Message" => "", "data" => []], 200);
@@ -51,9 +51,9 @@ class RetirosController extends Controller
 
             DB::beginTransaction();
             Retiros::create($request->all());
-            $retiros = Retiros::where('periodo_id',  $request->periodo_id)->get();
+            $retiros = Retiros::where('periodo_id', $request->periodo_id)->get();
             DB::commit();
-            return response()->json(["codigo" => 200, "Message"   => "Retiro creado correctamente.", "data" => $retiros],  200);
+            return response()->json(["codigo" => 200, "Message" => "Retiro creado correctamente.", "data" => $retiros], 200);
         } catch (Exception $e) {
             DB::rollBack();
             return response()->json(["codigo" => 400, "Message" => "Error al guardar retiro", "data" => []], 200);
@@ -114,13 +114,36 @@ class RetirosController extends Controller
             }
 
             $periodoActivo = Periodo::where('estado', 'Abierto')->first();
-            $retiros = Retiros::where('periodo_id',  $periodoActivo->id)->get();
+            $retiros = Retiros::where('periodo_id', $periodoActivo->id)->get();
 
             DB::commit();
-            return response()->json(["codigo" => 200, "Message" => "Retiro eliminado",  "data" => $retiros],  200);
+            return response()->json(["codigo" => 200, "Message" => "Retiro eliminado", "data" => $retiros], 200);
         } catch (Exception $e) {
             DB::rollBack();
             return response()->json(["codigo" => 400, "Message" => "Error al eliminar el retiro", "data" => []], 200);
+        }
+    }
+
+    public function ultimos30Dias()
+    {
+        try {
+            $fechaInicio = now()->subDays(30);
+            $retiros = Retiros::where('created_at', '>=', $fechaInicio)
+                ->select('id', 'created_at as fecha_hora', 'valorRetiro', 'observacion')
+                ->orderBy('created_at', 'desc')
+                ->get();
+
+            return response()->json([
+                "codigo" => 200,
+                "Message" => "Retiros de los últimos 30 días",
+                "data" => $retiros
+            ], 200);
+        } catch (Exception $e) {
+            return response()->json([
+                "codigo" => 400,
+                "Message" => "Error al obtener los retiros",
+                "data" => []
+            ], 200);
         }
     }
 }

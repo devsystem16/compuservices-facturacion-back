@@ -14,4 +14,9 @@ class Detalles extends Model
     protected $table = 'detalles';
     protected $dates = ['deleted_at'];
     protected $fillable = ['factura_id', 'producto_id', 'cantidad', 'subtotal', 'precio_tipo'];
+
+    public function producto()
+    {
+        return $this->belongsTo(Productos::class, 'producto_id', 'id');
+    }
 }

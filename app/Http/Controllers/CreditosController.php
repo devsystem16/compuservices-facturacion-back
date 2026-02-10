@@ -53,7 +53,7 @@ class CreditosController extends Controller
                 $periodoActivo = Periodo::where('estado', 'Abierto')->firstOrFail();
                 $idPeriodo = $periodoActivo->id;
             } catch (Exception $e) {
-                $idPeriodo =  -1;
+                $idPeriodo = -1;
             }
 
 
@@ -65,8 +65,8 @@ class CreditosController extends Controller
                         'credito_id' => $creditos->id,
                         'abono' => $detalle["abono"],
                         'fecha' => $detalle["fecha"],
-                        'comentario' =>  $detalle["comentario"],
-                        'periodo_id' =>    $idPeriodo
+                        'comentario' => $detalle["comentario"],
+                        'periodo_id' => $idPeriodo
                     ]
                 );
             }
@@ -81,24 +81,24 @@ class CreditosController extends Controller
                         [
                             'credito_id' => $creditos->id,
                             'abono' => $formasPago["valor"],
-                            'fecha' =>  now()->format('Y-m-d'),
+                            'fecha' => now()->format('Y-m-d'),
                             'forma_pago_id' => $formasPago["id"],
-                            'comentario' =>   "Abono-inmediato",
-                            'periodo_id' =>    $idPeriodo
+                            'comentario' => "Abono-inmediato",
+                            'periodo_id' => $idPeriodo
                         ]
                     );
                 }
             }
 
-            $saldo =  $creditos->total  -  $sumaPagos;
-            $creditos->saldo =   $saldo;
+            $saldo = $creditos->total - $sumaPagos;
+            $creditos->saldo = $saldo;
             $creditos->save();
 
             DB::commit();
-            return  ["estado" =>  200,  "credito" =>     $creditos];
+            return ["estado" => 200, "credito" => $creditos];
         } catch (Exception $e) {
             DB::rollBack();
-            return response()->json(["estado" =>  400,  "credito" =>     []], 200);
+            return response()->json(["estado" => 400, "credito" => []], 200);
         }
     }
 
@@ -114,16 +114,16 @@ class CreditosController extends Controller
             $factura->save();
 
             // ELiminar detalles de creditos (Abonos de pagos)
-            $detallesCreditos =  DetalleCreditos::where("credito_id",  $idCredito)->get();
+            $detallesCreditos = DetalleCreditos::where("credito_id", $idCredito)->get();
             foreach ($detallesCreditos as $detalleC) {
                 $detalleC->delete();
             }
 
             // Devolver Stock en Productos.
-            $detalles =  Detalles::where("factura_id",  $factura->id)->get();
+            $detalles = Detalles::where("factura_id", $factura->id)->get();
             foreach ($detalles as $detalle) {
-                $producto =  Productos::find($detalle->producto_id);
-                $producto->stock =  $producto->stock  + $detalle->cantidad;
+                $producto = Productos::find($detalle->producto_id);
+                $producto->stock = $producto->stock + $detalle->cantidad;
                 $producto->save();
             }
 
@@ -134,7 +134,7 @@ class CreditosController extends Controller
             $credito->delete();
 
             DB::commit();
-            return response()->json(["codigo" => 200, "Message"   => "Crédito Anulado correctamente."],  200);
+            return response()->json(["codigo" => 200, "Message" => "Crédito Anulado correctamente."], 200);
         } catch (Exception $e) {
             DB::rollBack();
             return response()->json(["codigo" => 400, "Message" => "Error al eliminar"], 400);
@@ -142,7 +142,7 @@ class CreditosController extends Controller
     }
 
 
-    
+
     public function abonar(Request $request)
     {
 
@@ -150,22 +150,22 @@ class CreditosController extends Controller
         $credito = Creditos::findOrFail($request->credito_id);
 
 
-        $detalles =  DetalleCreditos::where("credito_id",   $credito->id)->get();
+        $detalles = DetalleCreditos::where("credito_id", $credito->id)->get();
         $totalPagado = 0;
         foreach ($detalles as $detalle) {
-            $totalPagado  =  $totalPagado +  $detalle->abono;
+            $totalPagado = $totalPagado + $detalle->abono;
         }
-        $valorMasAbono =  $totalPagado +  $request->abono;
+        $valorMasAbono = $totalPagado + $request->abono;
         $saldo = $credito->total - $valorMasAbono;
 
         $cambio = 0;
 
-        if ($valorMasAbono  >= $credito->total) {
+        if ($valorMasAbono >= $credito->total) {
             $cambio = $valorMasAbono - $credito->total;
             $valorMasAbono = $credito->total;
             $saldo = 0;
 
-            $factura = Facturas::where('credito_id',  $credito->id)->first();
+            $factura = Facturas::where('credito_id', $credito->id)->first();
             $factura->estado = "credito (PAGADO)";
             $factura->save();
         }
@@ -183,106 +183,108 @@ class CreditosController extends Controller
                 'abono' => $request->abono,
                 'fecha' => $fecha_hoy,
                 'forma_pago_id' => $request->forma_pago_id,
-                'comentario' =>  "Abono",
-                'periodo_id' =>  $request->periodo_id
+                'comentario' => "Abono",
+                'periodo_id' => $request->periodo_id
             ]
         );
 
-        return   ["totalCredito"  =>  $credito->total, "totalPagado" => $valorMasAbono, "saldo" => $saldo, "cambio" =>  $cambio];
+        return ["totalCredito" => $credito->total, "totalPagado" => $valorMasAbono, "saldo" => $saldo, "cambio" => $cambio];
     }
 
- public function ListadoCreditos()
-{
-    $creditos = Creditos::with([
-        'cliente:id,nombres,telefono',
-        'detalles.formaPago:id,label',
-        'factura' => function ($query) {
-            $query->select(
-                'facturas.id',
-                'facturas.credito_id',
-                'facturas.cliente_id',
-                'facturas.fecha',
-                'facturas.subtotal',
-                'facturas.iva',
-                'facturas.total',
-                'facturas.observacion',
-                'facturas.estado'
-            )
-            // 👉 aquí incluimos la relación con el cliente
-            ->with(['cliente:id,nombres,telefono'])
-            ->with(['detalles' => function ($q) {
-                $q->select(
-                    'detalles.id',
-                    'detalles.factura_id',
-                    'productos.nombre as producto',
-                    'detalles.cantidad',
-                    'detalles.subtotal',
-                    'detalles.precio_tipo'
+    public function ListadoCreditos()
+    {
+        $creditos = Creditos::with([
+            'cliente:id,nombres,telefono',
+            'detalles.formaPago:id,label',
+            'factura' => function ($query) {
+                $query->select(
+                    'facturas.id',
+                    'facturas.credito_id',
+                    'facturas.cliente_id',
+                    'facturas.fecha',
+                    'facturas.subtotal',
+                    'facturas.iva',
+                    'facturas.total',
+                    'facturas.observacion',
+                    'facturas.estado'
                 )
-                ->join('productos', 'productos.id', '=', 'detalles.producto_id');
-            }]);
-        }
-    ])
-    ->select(
-        'creditos.id',
-        'creditos.cliente_id',
-        'creditos.fecha',
-        'creditos.detalle',
-        'creditos.saldo',
-        'creditos.total'
-    )
-    ->where('creditos.saldo', '>', 0)
-    ->whereNull('creditos.deleted_at')
-    ->orderBy('creditos.updated_at', 'desc')
-    ->orderBy('creditos.fecha', 'desc')
-    ->get();
+                    // 👉 aquí incluimos la relación con el cliente
+                    ->with(['cliente:id,nombres,telefono'])
+                    ->with([
+                        'detalles' => function ($q) {
+                            $q->select(
+                                'detalles.id',
+                                'detalles.factura_id',
+                                'productos.nombre as producto',
+                                'detalles.cantidad',
+                                'detalles.subtotal',
+                                'detalles.precio_tipo'
+                            )
+                                ->join('productos', 'productos.id', '=', 'detalles.producto_id');
+                        }
+                    ]);
+            }
+        ])
+            ->select(
+                'creditos.id',
+                'creditos.cliente_id',
+                'creditos.fecha',
+                'creditos.detalle',
+                'creditos.saldo',
+                'creditos.total'
+            )
+            ->where('creditos.saldo', '>', 0)
+            ->whereNull('creditos.deleted_at')
+            ->orderBy('creditos.updated_at', 'desc')
+            ->orderBy('creditos.fecha', 'desc')
+            ->get();
 
-    // Calcular los abonos por crédito
-    $detallesAbonos = DetalleCreditos::select('credito_id', \DB::raw('SUM(abono) as total_abono'))
-        ->groupBy('credito_id')
-        ->pluck('total_abono', 'credito_id');
+        // Calcular los abonos por crédito
+        $detallesAbonos = DetalleCreditos::select('credito_id', \DB::raw('SUM(abono) as total_abono'))
+            ->groupBy('credito_id')
+            ->pluck('total_abono', 'credito_id');
 
-    // Construir el resultado
-    $resultado = $creditos->map(function ($credito) use ($detallesAbonos) {
-        return [
-            'id'       => $credito->id,
-            'cliente'  => $credito->cliente->nombres ?? null,
-            'telefono' => $credito->cliente->telefono ?? null,
-            'fecha'    => $credito->fecha,
-            'detalle'  => $credito->detalle,
-            'saldo'    => $credito->saldo,
-            'total'    => $credito->total,
-            'abono'    => $detallesAbonos[$credito->id] ?? 0,
-            'pagos'    => $credito->detalles->map(fn($pago) => [
-                'id'         => $pago->id,
-                'fecha'      => $pago->fecha,
-                'abono'      => $pago->abono,
-                'comentario' => $pago->comentario,
-                'forma_pago' => $pago->formaPago->label ?? null,
-                'forma_pago_id' => $pago->formaPago->id ?? null,
-            ]),
-            // 👉 factura con cliente incluido
-            'factura'  => $credito->factura ? [
-                'id'          => $credito->factura->id,
-                'cliente'     => $credito->factura->cliente->nombres ?? null,
-                'telefono'    => $credito->factura->cliente->telefono ?? null,
-                'fecha'       => $credito->factura->fecha,
-                'subtotal'    => $credito->factura->subtotal,
-                'iva'         => $credito->factura->iva,
-                'total'       => $credito->factura->total,
-                'observacion' => $credito->factura->observacion,
-                'estado'      => $credito->factura->estado,
-                'detalles'    => $credito->factura->detalles,
-            ] : null,
-        ];
-    });
+        // Construir el resultado
+        $resultado = $creditos->map(function ($credito) use ($detallesAbonos) {
+            return [
+                'id' => $credito->id,
+                'cliente' => $credito->cliente->nombres ?? null,
+                'telefono' => $credito->cliente->telefono ?? null,
+                'fecha' => $credito->fecha,
+                'detalle' => $credito->detalle,
+                'saldo' => $credito->saldo,
+                'total' => $credito->total,
+                'abono' => $detallesAbonos[$credito->id] ?? 0,
+                'pagos' => $credito->detalles->map(fn($pago) => [
+                    'id' => $pago->id,
+                    'fecha' => $pago->fecha,
+                    'abono' => $pago->abono,
+                    'comentario' => $pago->comentario,
+                    'forma_pago' => $pago->formaPago->label ?? null,
+                    'forma_pago_id' => $pago->formaPago->id ?? null,
+                ]),
+                // 👉 factura con cliente incluido
+                'factura' => $credito->factura ? [
+                    'id' => $credito->factura->id,
+                    'cliente' => $credito->factura->cliente->nombres ?? null,
+                    'telefono' => $credito->factura->cliente->telefono ?? null,
+                    'fecha' => $credito->factura->fecha,
+                    'subtotal' => $credito->factura->subtotal,
+                    'iva' => $credito->factura->iva,
+                    'total' => $credito->factura->total,
+                    'observacion' => $credito->factura->observacion,
+                    'estado' => $credito->factura->estado,
+                    'detalles' => $credito->factura->detalles,
+                ] : null,
+            ];
+        });
 
-    return $resultado;
-}
+        return $resultado;
+    }
 
 
- 
-  
+
+
 
 
     /**
@@ -316,7 +318,7 @@ class CreditosController extends Controller
      */
     public function update(Request $request, $id)
     {
-        return   Creditos::find($id)->update($request->all());
+        return Creditos::find($id)->update($request->all());
     }
 
     /**
@@ -328,5 +330,24 @@ class CreditosController extends Controller
     public function destroy($id)
     {
         Creditos::findOrFail($id)->delete();
+    }
+    public function anularPorFactura($idFactura)
+    {
+        try {
+            $factura = Facturas::find($idFactura);
+
+            if (!$factura) {
+                return response()->json(["codigo" => 404, "Message" => "Factura no encontrada"], 200);
+            }
+
+            if (!$factura->credito_id) {
+                return response()->json(["codigo" => 400, "Message" => "Esta factura no tiene un crédito asociado"], 200);
+            }
+
+            // Reutilizamos la lógica existente de eliminación de crédito
+            return $this->eliminarCredito($factura->credito_id);
+        } catch (Exception $e) {
+            return response()->json(["codigo" => 400, "Message" => "Error al procesar la anulación"], 200);
+        }
     }
 }

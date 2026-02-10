@@ -15,9 +15,16 @@ use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Exception;
+use App\Services\Sri\SriService;
 
 class FacturasController extends Controller
 {
+    protected $sriService;
+
+    public function __construct(SriService $sriService)
+    {
+        $this->sriService = $sriService;
+    }
     /**
      * Display a listing of the resource.
      *
@@ -47,6 +54,9 @@ class FacturasController extends Controller
     public function store(Request $request)
     {
 
+
+
+
         // $suma = 0;
         // foreach ($request->formasPago as $formasPago) {
         //     $suma +=   $formasPago["valor"];
@@ -70,13 +80,13 @@ class FacturasController extends Controller
                 $producto->stock = $producto->stock - $detalle["cantidad"];
                 $producto->save();
 
-                Detalles::create(
+                $detalles = Detalles::create(
                     [
                         'factura_id' => $facturas->id,
                         'producto_id' => $detalle["producto_id"],
                         'cantidad' => $detalle["cantidad"],
-                        'subtotal' =>  $detalle["subtotal"],
-                        'precio_tipo' =>   $detalle["precio_tipo"]
+                        'subtotal' => $detalle["subtotal"],
+                        'precio_tipo' => $detalle["precio_tipo"]
                     ]
                 );
             }
@@ -87,10 +97,10 @@ class FacturasController extends Controller
                     if ($formasPago["valor"] > 0) {
                         FormaPagoFactura::create(
                             [
-                                'factura_id' =>   $facturas->id,
+                                'factura_id' => $facturas->id,
                                 'forma_pago_id' => $formasPago["id"],
                                 'valor' => $formasPago["valor"],
-                                'observacion' =>  ""
+                                'observacion' => ""
                             ]
                         );
                     }
@@ -101,27 +111,27 @@ class FacturasController extends Controller
                 if ($formaPagoDefault) {
                     FormaPagoFactura::create(
                         [
-                            'factura_id' =>   $facturas->id,
+                            'factura_id' => $facturas->id,
                             'forma_pago_id' => $formaPagoDefault->id,
-                            'valor' =>  $facturas->total,
-                            'observacion' =>  ""
+                            'valor' => $facturas->total,
+                            'observacion' => ""
                         ]
                     );
                 }
             }
 
-
-
-
-
-
-
-
             DB::commit();
-            return  ["estado" =>  200,  "factura" => $facturas, "Message" => "Factura Guardada"];
+
+            // SRI Process
+            // $facturas->load('cliente', 'detalles.producto');
+
+            //  $sriResponse = $this->sriService->procesarFactura($facturas);
+
+            return ["estado" => 200, "factura" => $facturas, "Message" => "Factura Guardada", "sri" => null];
+            // return ["estado" => 200, "factura" => $facturas, "Message" => "Factura Guardada", "sri" => $sriResponse];
         } catch (Exception $e) {
             DB::rollBack();
-            return response()->json(["estado" => 400, "Message" => "Ocurrió un error en el servidor.", "factura" =>  []], 200);
+            return response()->json(["estado" => 400, "Message" => "Ocurrió un error en el servidor.", "factura" => []], 200);
         }
     }
     /**
@@ -155,7 +165,7 @@ class FacturasController extends Controller
      */
     public function update(Request $request, $id)
     {
-        return   Facturas::find($id)->update($request->all());
+        return Facturas::find($id)->update($request->all());
     }
 
     /**
@@ -172,7 +182,7 @@ class FacturasController extends Controller
     public function historiofacturas(Request $request, $limite)
     {
         $reporte = [];
-        $facturas =  Facturas::select(
+        $facturas = Facturas::select(
             'facturas.id',
             'clientes.nombres as cliente',
             'facturas.fecha',
@@ -185,13 +195,15 @@ class FacturasController extends Controller
             ->join('clientes', 'clientes.id', 'facturas.cliente_id')
             ->orderBy('facturas.created_at', 'desc')
             ->take($limite)
-            ->get();;
+            ->get();
+        ;
 
         foreach ($facturas as $factura) {
             $detalle = Detalles::select(
                 'detalles.id',
                 'productos.nombre as producto',
                 'productos.id as idProducto',
+                'productos.codigo_barra',
                 'detalles.cantidad',
                 'detalles.subtotal',
                 'detalles.precio_tipo'
@@ -200,11 +212,11 @@ class FacturasController extends Controller
                 ->where('factura_id', $factura->id)
 
                 ->get();
-            $factura->detalles =  $detalle;
+            $factura->detalles = $detalle;
 
 
 
-                $formasPagoFactura = DB::table('forma_pago_facturas')
+            $formasPagoFactura = DB::table('forma_pago_facturas')
                 ->join('forma_pagos', 'forma_pagos.id', '=', 'forma_pago_facturas.forma_pago_id')
                 ->select('forma_pago_facturas.*', 'forma_pagos.label as descripcionFormaPago')
                 ->where('forma_pago_facturas.factura_id', $factura->id)
@@ -219,7 +231,7 @@ class FacturasController extends Controller
                 'factura' => $factura
             ]);
         }
-        return   $reporte;
+        return $reporte;
     }
 
 
@@ -227,7 +239,7 @@ class FacturasController extends Controller
     {
         $reporte = [];
 
-        $facturas =  Facturas::select(
+        $facturas = Facturas::select(
             'facturas.id',
             'facturas.cliente_id',
             'facturas.fecha',
@@ -244,11 +256,11 @@ class FacturasController extends Controller
             ->orderBy('facturas.created_at', 'desc')
             ->first();
 
-        $cliente =  Clientes::select('cedula', 'nombres', 'telefono', 'direccion')
+        $cliente = Clientes::select('cedula', 'nombres', 'telefono', 'direccion')
             ->where('id', $facturas->cliente_id)->first();
 
 
-        $totales =  ["subtotal" => $facturas->subtotal, "iva"  => $facturas->iva, "total" =>  $facturas->total, "observaciones" =>  $facturas->observacion];
+        $totales = ["subtotal" => $facturas->subtotal, "iva" => $facturas->iva, "total" => $facturas->total, "observaciones" => $facturas->observacion];
 
         $detalle = Detalles::select(
             'detalles.id',
@@ -264,9 +276,9 @@ class FacturasController extends Controller
             ->join('productos', 'productos.id', 'detalles.producto_id')
             ->where('factura_id', $facturas->id)->get();
 
-        $facturas->detalles =  $detalle;
-        $facturas->cliente =  $cliente;
-        $facturas->totales =    $totales;
+        $facturas->detalles = $detalle;
+        $facturas->cliente = $cliente;
+        $facturas->totales = $totales;
         array_push($reporte, [
             'factura' => $facturas
         ]);
@@ -283,8 +295,8 @@ class FacturasController extends Controller
 
 
 
-        if ($factura->estado  == "Anulada") {
-            return    ["codigo" => 203, "mensaje"   => "Factura ya se encuentra anulada"];
+        if ($factura->estado == "Anulada") {
+            return ["codigo" => 203, "mensaje" => "Factura ya se encuentra anulada"];
         }
 
         if ($factura->es_credito == 1) {
@@ -306,16 +318,16 @@ class FacturasController extends Controller
 
 
 
-        $detalles =  Detalles::where("factura_id",  $factura->id)->get();
+        $detalles = Detalles::where("factura_id", $factura->id)->get();
 
         foreach ($detalles as $detalle) {
-            $producto =  Productos::find($detalle->producto_id);
-            $producto->stock =  $producto->stock  + $detalle->cantidad;
+            $producto = Productos::find($detalle->producto_id);
+            $producto->stock = $producto->stock + $detalle->cantidad;
             $producto->save();
         }
 
 
-        return    ["codigo" => 200, "mensaje"   => "Factura Anulada correctamente."];
+        return ["codigo" => 200, "mensaje" => "Factura Anulada correctamente."];
     }
 
     public function historiofacturasFilter(Request $request)
@@ -338,8 +350,8 @@ class FacturasController extends Controller
                     $query->where(function ($query) use ($term) {
                         $query->where('clientes.nombres', 'LIKE', '%' . $term . '%')
                             ->orWhere('facturas.id', 'LIKE', '%' . $term . '%')
-                             ->orWhere('clientes.cedula', 'LIKE', '%' . $term . '%')
-                            ;
+                            ->orWhere('clientes.cedula', 'LIKE', '%' . $term . '%')
+                        ;
                     });
                 }
             })
@@ -352,14 +364,14 @@ class FacturasController extends Controller
 
             $detalles = DB::table('detalles')
                 ->join('productos', 'productos.id', '=', 'detalles.producto_id')
-                ->select('detalles.*', 'productos.nombre as producto', 'productos.id as idProducto')
+                ->select('detalles.*', 'productos.nombre as producto', 'productos.id as idProducto', 'productos.codigo_barra')
                 ->where('detalles.factura_id', $factura->id)
                 ->get();
 
             $factura->detalles = $detalles;
 
 
-          $formasPagoFactura = DB::table('forma_pago_facturas')
+            $formasPagoFactura = DB::table('forma_pago_facturas')
                 ->join('forma_pagos', 'forma_pagos.id', '=', 'forma_pago_facturas.forma_pago_id')
                 ->select('forma_pago_facturas.*', 'forma_pagos.label as descripcionFormaPago')
                 ->where('forma_pago_facturas.factura_id', $factura->id)
@@ -408,13 +420,13 @@ class FacturasController extends Controller
 
         return $reporte;
     }
- 
+
 
     public function reporteDiario()
     {
-        $reporteDiario =   DB::select(' call reporteDiario();');
+        $reporteDiario = DB::select(' call reporteDiario();');
 
- 
+
 
 
         // $facturas = Facturas::select('facturas.id', 'facturas.observacion', 'detalles.cantidad', 'detalles.subtotal',  'productos.nombre as producto', 'detalles.precio_tipo',)
@@ -423,7 +435,7 @@ class FacturasController extends Controller
         //     ->get();
 
 
-        $productosStock =  Productos::select(
+        $productosStock = Productos::select(
             'id',
             'nombre',
             'descripcion',
@@ -441,7 +453,7 @@ class FacturasController extends Controller
 
         $clientes = DB::table('clientes as c')
             ->selectRaw('count(*) as cantidadclientes')
-            ->where('deleted_at', '=',  null)
+            ->where('deleted_at', '=', null)
             ->first();
 
 
@@ -460,11 +472,11 @@ class FacturasController extends Controller
             $periodoActivo = Periodo::where('estado', 'Abierto')->firstOrFail();
             $idPeriodo = $periodoActivo->id;
         } catch (Exception $e) {
-            $idPeriodo =  -1;
+            $idPeriodo = -1;
         }
 
         // $facturas = Facturas::where('fecha', '>=', $fecha_hoy)
-        $facturas = Facturas::where('periodo_id', '=',  $idPeriodo)
+        $facturas = Facturas::where('periodo_id', '=', $idPeriodo)
             ->select(DB::raw('count(*) as NumeroFacturas'))
             ->where('estado', '=', 'cerrada')
             ->first();
@@ -472,10 +484,10 @@ class FacturasController extends Controller
 
         $totalVentas = 0;
         foreach ($reporteDiario as $item) {
-            $totalVentas  =  $totalVentas +  $item->valor;
+            $totalVentas = $totalVentas + $item->valor;
         }
 
 
-        return  ["estado" =>  200, "productosStockBajo"  => $productosStock, "NumeroCreditos"  => $creditos->totalCreditos, "NumeroFacturas" =>  $facturas->NumeroFacturas, "clientes" =>  $clientes->cantidadclientes, "totalVendido" =>  $totalVentas, "desglose" =>  $reporteDiario];
+        return ["estado" => 200, "productosStockBajo" => $productosStock, "NumeroCreditos" => $creditos->totalCreditos, "NumeroFacturas" => $facturas->NumeroFacturas, "clientes" => $clientes->cantidadclientes, "totalVendido" => $totalVentas, "desglose" => $reporteDiario];
     }
 }
