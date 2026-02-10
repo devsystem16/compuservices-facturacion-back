@@ -17,7 +17,7 @@
     <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/alertifyjs@1.13.1/build/css/themes/semantic.min.css" />
     <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/alertifyjs@1.13.1/build/css/themes/bootstrap.min.css" />
     <title>Grupo Compustar</title>
-    <script defer="defer" src="/static/js/main.0386dafb.js"></script>
+    <script defer="defer" src="/static/js/main.04239af1.js"></script>
     <link href="/static/css/main.08cdf515.css" rel="stylesheet">
 </head>
 
