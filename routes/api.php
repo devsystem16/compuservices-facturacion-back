@@ -53,7 +53,7 @@ Route::post('/proformas/eliminar/{idProforma}', [ProformaController::class, 'eli
 
 Route::post('/proformas/obtener', [ProformaController::class, 'obtenerProforma']);
 
-
+// COmentario. PAra despliegue.
 Route::get('/reporte/ventas', [FacturasController::class, 'reporteDiario']);
 Route::get('/reporte/historicofacturas/{limite}', [FacturasController::class, 'historiofacturas']);
 
