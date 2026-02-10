@@ -1,10 +1,7 @@
-RewriteEngine on
+  <IfModule mod_rewrite.c>
+      RewriteEngine On
 
-# serve existing files in the /public folder as if they were in /
-
-RewriteCond %{DOCUMENT_ROOT}public%{REQUEST_URI} -f
-RewriteRule (.+) /public/$1 [L]
-
-# route everything else to /public/index.php
-
-RewriteRule ^ /public/index.php [L]
+      # Redirigir todo a la carpeta public/
+      RewriteCond %{REQUEST_URI} !^/public/
+      RewriteRule ^(.*)$ /public/$1 [L]
+  </IfModule>
