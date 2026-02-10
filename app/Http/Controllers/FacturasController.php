@@ -70,40 +70,47 @@ class FacturasController extends Controller
             DB::beginTransaction();
             $facturas = Facturas::create($request->cabecera);
 
+            // Cargar todos los productos en 1 query
+            $productoIds = collect($request->detalle)->pluck('producto_id')->unique();
+            $productos = Productos::whereIn('id', $productoIds)->get()->keyBy('id');
 
-
-
-
+            // Actualizar stock y preparar detalles para batch insert
+            $detallesInsert = [];
+            $now = now();
             foreach ($request->detalle as $detalle) {
-
-                $producto = Productos::find($detalle["producto_id"]);
+                $producto = $productos[$detalle["producto_id"]];
                 $producto->stock = $producto->stock - $detalle["cantidad"];
                 $producto->save();
 
-                $detalles = Detalles::create(
-                    [
-                        'factura_id' => $facturas->id,
-                        'producto_id' => $detalle["producto_id"],
-                        'cantidad' => $detalle["cantidad"],
-                        'subtotal' => $detalle["subtotal"],
-                        'precio_tipo' => $detalle["precio_tipo"]
-                    ]
-                );
+                $detallesInsert[] = [
+                    'factura_id' => $facturas->id,
+                    'producto_id' => $detalle["producto_id"],
+                    'cantidad' => $detalle["cantidad"],
+                    'subtotal' => $detalle["subtotal"],
+                    'precio_tipo' => $detalle["precio_tipo"],
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ];
             }
+            Detalles::insert($detallesInsert);
 
-            // Si se envia un array de formas de pago, Guardarlas
+            // Si se envia un array de formas de pago, Guardarlas en batch
             if (!empty($request->formasPago) && is_array($request->formasPago)) {
+                $formasPagoInsert = [];
                 foreach ($request->formasPago as $formasPago) {
                     if ($formasPago["valor"] > 0) {
-                        FormaPagoFactura::create(
-                            [
-                                'factura_id' => $facturas->id,
-                                'forma_pago_id' => $formasPago["id"],
-                                'valor' => $formasPago["valor"],
-                                'observacion' => ""
-                            ]
-                        );
+                        $formasPagoInsert[] = [
+                            'factura_id' => $facturas->id,
+                            'forma_pago_id' => $formasPago["id"],
+                            'valor' => $formasPago["valor"],
+                            'observacion' => "",
+                            'created_at' => $now,
+                            'updated_at' => $now,
+                        ];
                     }
+                }
+                if (!empty($formasPagoInsert)) {
+                    FormaPagoFactura::insert($formasPagoInsert);
                 }
             } else {
                 // SI no se envia un array o ninguna forma de pago. Guardarla por Defecto.
@@ -181,57 +188,52 @@ class FacturasController extends Controller
 
     public function historiofacturas(Request $request, $limite)
     {
-        $reporte = [];
-        $facturas = Facturas::select(
-            'facturas.id',
-            'clientes.nombres as cliente',
-            'facturas.fecha',
-            'facturas.subtotal',
-            'facturas.iva',
-            'facturas.total',
-            'facturas.observacion',
-            'facturas.estado'
-        )
-            ->join('clientes', 'clientes.id', 'facturas.cliente_id')
-            ->orderBy('facturas.created_at', 'desc')
+        $facturas = Facturas::with([
+            'cliente:id,nombres',
+            'detalles.producto:id,nombre,codigo_barra',
+            'formaPagoFactura.FormaPago:id,label'
+        ])
+            ->orderBy('created_at', 'desc')
             ->take($limite)
             ->get();
-        ;
 
-        foreach ($facturas as $factura) {
-            $detalle = Detalles::select(
-                'detalles.id',
-                'productos.nombre as producto',
-                'productos.id as idProducto',
-                'productos.codigo_barra',
-                'detalles.cantidad',
-                'detalles.subtotal',
-                'detalles.precio_tipo'
-            )
-                ->join('productos', 'productos.id', 'detalles.producto_id')
-                ->where('factura_id', $factura->id)
+        $reporte = $facturas->map(function ($factura) {
+            return [
+                'factura' => [
+                    'id' => $factura->id,
+                    'cliente' => $factura->cliente->nombres ?? null,
+                    'fecha' => $factura->fecha,
+                    'subtotal' => $factura->subtotal,
+                    'iva' => $factura->iva,
+                    'total' => $factura->total,
+                    'observacion' => $factura->observacion,
+                    'estado' => $factura->estado,
+                    'detalles' => $factura->detalles->map(function ($detalle) {
+                        return [
+                            'id' => $detalle->id,
+                            'producto' => $detalle->producto->nombre ?? null,
+                            'idProducto' => $detalle->producto_id,
+                            'codigo_barra' => $detalle->producto->codigo_barra ?? null,
+                            'cantidad' => $detalle->cantidad,
+                            'subtotal' => $detalle->subtotal,
+                            'precio_tipo' => $detalle->precio_tipo,
+                        ];
+                    }),
+                    'formasPago' => $factura->formaPagoFactura->map(function ($fp) {
+                        return [
+                            'id' => $fp->id,
+                            'factura_id' => $fp->factura_id,
+                            'forma_pago_id' => $fp->forma_pago_id,
+                            'valor' => $fp->valor,
+                            'observacion' => $fp->observacion,
+                            'descripcionFormaPago' => $fp->FormaPago->label ?? null,
+                        ];
+                    }),
+                ]
+            ];
+        });
 
-                ->get();
-            $factura->detalles = $detalle;
-
-
-
-            $formasPagoFactura = DB::table('forma_pago_facturas')
-                ->join('forma_pagos', 'forma_pagos.id', '=', 'forma_pago_facturas.forma_pago_id')
-                ->select('forma_pago_facturas.*', 'forma_pagos.label as descripcionFormaPago')
-                ->where('forma_pago_facturas.factura_id', $factura->id)
-                ->get();
-
-            $factura->formasPago = $formasPagoFactura;
-
-
-
-
-            array_push($reporte, [
-                'factura' => $factura
-            ]);
-        }
-        return $reporte;
+        return $reporte->values();
     }
 
 
@@ -318,107 +320,75 @@ class FacturasController extends Controller
 
 
 
-        $detalles = Detalles::where("factura_id", $factura->id)->get();
+        $detalles = Detalles::with('producto')->where("factura_id", $factura->id)->get();
 
         foreach ($detalles as $detalle) {
-            $producto = Productos::find($detalle->producto_id);
-            $producto->stock = $producto->stock + $detalle->cantidad;
-            $producto->save();
+            $detalle->producto->increment('stock', $detalle->cantidad);
         }
-
 
         return ["codigo" => 200, "mensaje" => "Factura Anulada correctamente."];
     }
 
     public function historiofacturasFilter(Request $request)
     {
-
-        $facturas = Facturas::select(
-            'facturas.id',
-            'clientes.nombres as cliente',
-            'facturas.fecha',
-            'facturas.subtotal',
-            'facturas.iva',
-            'facturas.total',
-            'facturas.observacion',
-            'facturas.estado'
-        )
-            ->join('clientes', 'clientes.id', '=', 'facturas.cliente_id')
-            ->where(function ($query) use ($request) {
+        $facturas = Facturas::with([
+            'cliente:id,nombres,cedula',
+            'detalles.producto:id,nombre,codigo_barra',
+            'formaPagoFactura.FormaPago:id,label'
+        ])
+            ->whereHas('cliente', function ($query) use ($request) {
                 $searchTerms = explode(' ', $request->filter);
                 foreach ($searchTerms as $term) {
-                    $query->where(function ($query) use ($term) {
-                        $query->where('clientes.nombres', 'LIKE', '%' . $term . '%')
-                            ->orWhere('facturas.id', 'LIKE', '%' . $term . '%')
-                            ->orWhere('clientes.cedula', 'LIKE', '%' . $term . '%')
-                        ;
+                    $query->where(function ($q) use ($term) {
+                        $q->where('nombres', 'LIKE', '%' . $term . '%')
+                            ->orWhere('cedula', 'LIKE', '%' . $term . '%');
                     });
                 }
             })
-            ->orderBy('facturas.created_at', 'desc')
+            ->orWhere(function ($query) use ($request) {
+                $query->where('facturas.id', 'LIKE', '%' . $request->filter . '%');
+            })
+            ->orderBy('created_at', 'desc')
             ->take($request->limite)
             ->get();
 
         $reporte = $facturas->map(function ($factura) {
-
-
-            $detalles = DB::table('detalles')
-                ->join('productos', 'productos.id', '=', 'detalles.producto_id')
-                ->select('detalles.*', 'productos.nombre as producto', 'productos.id as idProducto', 'productos.codigo_barra')
-                ->where('detalles.factura_id', $factura->id)
-                ->get();
-
-            $factura->detalles = $detalles;
-
-
-            $formasPagoFactura = DB::table('forma_pago_facturas')
-                ->join('forma_pagos', 'forma_pagos.id', '=', 'forma_pago_facturas.forma_pago_id')
-                ->select('forma_pago_facturas.*', 'forma_pagos.label as descripcionFormaPago')
-                ->where('forma_pago_facturas.factura_id', $factura->id)
-                ->get();
-
-            $factura->formasPago = $formasPagoFactura;
-
-            return ['factura' => $factura];
-
-
-
+            return [
+                'factura' => [
+                    'id' => $factura->id,
+                    'cliente' => $factura->cliente->nombres ?? null,
+                    'fecha' => $factura->fecha,
+                    'subtotal' => $factura->subtotal,
+                    'iva' => $factura->iva,
+                    'total' => $factura->total,
+                    'observacion' => $factura->observacion,
+                    'estado' => $factura->estado,
+                    'detalles' => $factura->detalles->map(function ($detalle) {
+                        return [
+                            'id' => $detalle->id,
+                            'producto' => $detalle->producto->nombre ?? null,
+                            'idProducto' => $detalle->producto_id,
+                            'codigo_barra' => $detalle->producto->codigo_barra ?? null,
+                            'cantidad' => $detalle->cantidad,
+                            'subtotal' => $detalle->subtotal,
+                            'precio_tipo' => $detalle->precio_tipo,
+                        ];
+                    }),
+                    'formasPago' => $factura->formaPagoFactura->map(function ($fp) {
+                        return [
+                            'id' => $fp->id,
+                            'factura_id' => $fp->factura_id,
+                            'forma_pago_id' => $fp->forma_pago_id,
+                            'valor' => $fp->valor,
+                            'observacion' => $fp->observacion,
+                            'descripcionFormaPago' => $fp->FormaPago->label ?? null,
+                        ];
+                    }),
+                ]
+            ];
         });
 
-        return $reporte;
-
-
-
-        $facturas = Facturas::select(
-            'facturas.id',
-            'clientes.nombres as cliente',
-            'facturas.fecha',
-            'facturas.subtotal',
-            'facturas.iva',
-            'facturas.total',
-            'facturas.observacion',
-            'facturas.estado'
-        )
-            ->join('clientes', 'clientes.id', '=', 'facturas.cliente_id')
-            ->where(function ($query) use ($request) {
-                $searchTerms = explode(' ', $request->filter);
-                foreach ($searchTerms as $term) {
-                    $query->where(function ($query) use ($term) {
-                        $query->where('clientes.nombres', 'LIKE', '%' . $term . '%')
-                            ->orWhere('facturas.id', 'LIKE', '%' . $term . '%');
-                    });
-                }
-            })
-            ->orderBy('facturas.created_at', 'desc')
-            ->take($request->limite)
-            ->get();
-
-        $reporte = $facturas->map(function ($factura) {
-            $factura->detalles = $factura->detalles;
-            return ['factura' => $factura];
-        });
-
-        return $reporte;
+        return $reporte->values();
     }
 
 
@@ -482,10 +452,7 @@ class FacturasController extends Controller
             ->first();
 
 
-        $totalVentas = 0;
-        foreach ($reporteDiario as $item) {
-            $totalVentas = $totalVentas + $item->valor;
-        }
+        $totalVentas = collect($reporteDiario)->sum('valor');
 
 
         return ["estado" => 200, "productosStockBajo" => $productosStock, "NumeroCreditos" => $creditos->totalCreditos, "NumeroFacturas" => $facturas->NumeroFacturas, "clientes" => $clientes->cantidadclientes, "totalVendido" => $totalVentas, "desglose" => $reporteDiario];

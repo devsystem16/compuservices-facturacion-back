@@ -113,18 +113,13 @@ class CreditosController extends Controller
             $factura->estado = "Anulada";
             $factura->save();
 
-            // ELiminar detalles de creditos (Abonos de pagos)
-            $detallesCreditos = DetalleCreditos::where("credito_id", $idCredito)->get();
-            foreach ($detallesCreditos as $detalleC) {
-                $detalleC->delete();
-            }
+            // Eliminar detalles de creditos (Abonos de pagos) en 1 query
+            DetalleCreditos::where("credito_id", $idCredito)->delete();
 
-            // Devolver Stock en Productos.
-            $detalles = Detalles::where("factura_id", $factura->id)->get();
+            // Devolver Stock en Productos con eager loading (2 queries en vez de 2N)
+            $detalles = Detalles::with('producto')->where("factura_id", $factura->id)->get();
             foreach ($detalles as $detalle) {
-                $producto = Productos::find($detalle->producto_id);
-                $producto->stock = $producto->stock + $detalle->cantidad;
-                $producto->save();
+                $detalle->producto->increment('stock', $detalle->cantidad);
             }
 
             // anular Factura. 
@@ -150,11 +145,7 @@ class CreditosController extends Controller
         $credito = Creditos::findOrFail($request->credito_id);
 
 
-        $detalles = DetalleCreditos::where("credito_id", $credito->id)->get();
-        $totalPagado = 0;
-        foreach ($detalles as $detalle) {
-            $totalPagado = $totalPagado + $detalle->abono;
-        }
+        $totalPagado = DetalleCreditos::where("credito_id", $credito->id)->sum('abono');
         $valorMasAbono = $totalPagado + $request->abono;
         $saldo = $credito->total - $valorMasAbono;
 
