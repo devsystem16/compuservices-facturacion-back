@@ -104,7 +104,7 @@ class ReporteController extends Controller
             $periodoActivo = Periodo::where('estado', 'Abierto')->firstOrFail();
             $idPeriodo = $periodoActivo->id;
         } catch (Exception $e) {
-            $idPeriodo =  -1;
+            $idPeriodo = -1;
         }
 
 
@@ -116,22 +116,22 @@ class ReporteController extends Controller
             ->join('creditos', 'creditos.id', '=', 'detalle_creditos.credito_id')
             ->leftJoin('facturas', 'facturas.credito_id', '=', 'creditos.id')
             // ->whereDate('detalle_creditos.fecha', '=', now()->format('Y-m-d'))
-            ->select('forma_pagos.id as forma_pago_id',  'forma_pagos.label', DB::raw('SUM(detalle_creditos.abono) as total'))
-            ->where('facturas.estado', '<>',  'Anulada')
-            ->where('detalle_creditos.periodo_id', '=',    $idPeriodo)
+            ->select('forma_pagos.id as forma_pago_id', 'forma_pagos.label', DB::raw('SUM(detalle_creditos.abono) as total'))
+            ->where('facturas.estado', '<>', 'Anulada')
+            ->where('detalle_creditos.periodo_id', '=', $idPeriodo)
 
-            ->groupBy('forma_pagos.id')
+            ->groupBy('forma_pagos.id', 'forma_pagos.label')
             ->get();
 
 
         $creditos = FormaPagoFactura::join('forma_pagos', 'forma_pagos.id', '=', 'forma_pago_facturas.forma_pago_id')
             ->join('facturas', 'facturas.id', '=', 'forma_pago_facturas.factura_id')
             // ->whereDate('facturas.fecha', '=', now()->format('Y-m-d'))
-            ->select('forma_pagos.id as forma_pago_id',  'forma_pagos.label', DB::raw('SUM(forma_pago_facturas.valor) as total'))
+            ->select('forma_pagos.id as forma_pago_id', 'forma_pagos.label', DB::raw('SUM(forma_pago_facturas.valor) as total'))
             ->where('facturas.es_credito', '=', 0)
-            ->where('facturas.estado', '<>',  'Anulada')
-            ->where('facturas.periodo_id', '=',   $idPeriodo)
-            ->groupBy('forma_pagos.id')
+            ->where('facturas.estado', '<>', 'Anulada')
+            ->where('facturas.periodo_id', '=', $idPeriodo)
+            ->groupBy('forma_pagos.id', 'forma_pagos.label')
             ->get();
 
         // Combinar los resultados en un solo arreglo
@@ -151,9 +151,9 @@ class ReporteController extends Controller
 
 
 
-        $sumaValorRetiro = Retiros::where('periodo_id',  $idPeriodo)->sum('valorRetiro');
+        $sumaValorRetiro = Retiros::where('periodo_id', $idPeriodo)->sum('valorRetiro');
 
-        return ["reporteFormasPago" => $agrupados, "totalRetiros"  => $sumaValorRetiro];
+        return ["reporteFormasPago" => $agrupados, "totalRetiros" => $sumaValorRetiro];
 
 
 
@@ -193,7 +193,7 @@ class ReporteController extends Controller
 
 
 
-        return  $unificado;
+        return $unificado;
 
 
 
@@ -229,7 +229,7 @@ class ReporteController extends Controller
 
 
 
-        return ["facturas" =>  $factura, "Credito" =>  $credito];
+        return ["facturas" => $factura, "Credito" => $credito];
 
 
 
@@ -288,7 +288,7 @@ class ReporteController extends Controller
 
         $row = [];
         //Usuario, Total Ingresos, Ventas  
-        $usuarios =  Usuarios::all();
+        $usuarios = Usuarios::all();
         $reporte = [];
         $totalGlobal = 0;
         foreach ($usuarios as $usuario) {
@@ -302,9 +302,9 @@ class ReporteController extends Controller
                 ->selectRaw('sum(abono_ordenes.abono) as totalAbono')
                 ->leftJoin('abono_ordenes', 'abono_ordenes.orden_id', '=', 'ordenes.id')
                 ->whereBetween('ordenes.fecha', [$request->fecha_desde, $request->fecha_hasta])
-                ->where('ordenes.usuario_id', '=',  $usuario->id)
+                ->where('ordenes.usuario_id', '=', $usuario->id)
                 ->join('usuarios', 'usuarios.id', 'ordenes.usuario_id')
-                ->where('ordenes.estado', '=',  '1')
+                ->where('ordenes.estado', '=', '1')
                 ->groupBy('abono_ordenes.orden_id', 'ordenes.id')
                 ->distinct()
                 ->get();
@@ -313,10 +313,10 @@ class ReporteController extends Controller
             $total = 0;
 
             foreach ($ordenes as $orden) {
-                $totalGlobal +=    $orden->totalAbono;
-                $total +=     $orden->totalAbono;
+                $totalGlobal += $orden->totalAbono;
+                $total += $orden->totalAbono;
             }
-            $row  = ["usuario" =>  $usuario, "cantidad_ordenes" => $ordenes->count(), "total_venta" =>  $total];
+            $row = ["usuario" => $usuario, "cantidad_ordenes" => $ordenes->count(), "total_venta" => $total];
 
             array_push(
                 $reporte,
@@ -329,14 +329,14 @@ class ReporteController extends Controller
         $users = [];
         $ordenes = [];
 
-        $array = (array)collect($reporte)->sortBy('cantidad_ordenes')->reverse()->toArray();
+        $array = (array) collect($reporte)->sortBy('cantidad_ordenes')->reverse()->toArray();
         $resultsOrdenado = [];
         $conteo = 0;
 
 
         foreach ($array as $a) {
-            $users[$conteo] =  $a["usuario"] . "(" . $a["cantidad_ordenes"] . ")";
-            $ordenes[$conteo] =  $a["cantidad_ordenes"];
+            $users[$conteo] = $a["usuario"] . "(" . $a["cantidad_ordenes"] . ")";
+            $ordenes[$conteo] = $a["cantidad_ordenes"];
             $conteo++;
             array_push(
                 $resultsOrdenado,
@@ -349,35 +349,35 @@ class ReporteController extends Controller
         }
 
         $grafico = ["labels" => (array) $users, "series" => $ordenes];
-        return ["total_ventas" => $totalGlobal, "ventasEmpleados"  => $resultsOrdenado, "grafico" => $grafico];
+        return ["total_ventas" => $totalGlobal, "ventasEmpleados" => $resultsOrdenado, "grafico" => $grafico];
     }
     public function ventasDiarias(Request $request)
     {
 
 
 
-        $reporte =  [];
+        $reporte = [];
         $total_ventas = 0;
 
 
 
-       $facturas = Facturas::select(
-    'facturas.id as idControl',
-    'facturas.fecha',
-    'clientes.nombres as cliente',
-    'facturas.observacion',
-    'facturas.total as totalAbono',
-    \DB::raw("GROUP_CONCAT(CONCAT(forma_pagos.label, ' ($', forma_pago_facturas.valor, ')') SEPARATOR ', ') as formasPagos")
-)
-->selectRaw("'Factura' as tipo")
-->join('clientes', 'clientes.id', 'facturas.cliente_id')
-->join('forma_pago_facturas', 'forma_pago_facturas.factura_id', 'facturas.id')
-->join('forma_pagos', 'forma_pagos.id', 'forma_pago_facturas.forma_pago_id')
-->where('facturas.estado', 'cerrada')
-->whereBetween(\DB::raw("DATE(facturas.fecha)"), [$request->fecha_desde, $request->fecha_hasta])
-->groupBy('facturas.id', 'facturas.fecha', 'clientes.nombres', 'facturas.observacion', 'facturas.total')
-->orderBy('facturas.created_at', 'desc')
-->get();
+        $facturas = Facturas::select(
+            'facturas.id as idControl',
+            'facturas.fecha',
+            'clientes.nombres as cliente',
+            'facturas.observacion',
+            'facturas.total as totalAbono',
+            \DB::raw("GROUP_CONCAT(CONCAT(forma_pagos.label, ' ($', forma_pago_facturas.valor, ')') SEPARATOR ', ') as formasPagos")
+        )
+            ->selectRaw("'Factura' as tipo")
+            ->join('clientes', 'clientes.id', 'facturas.cliente_id')
+            ->join('forma_pago_facturas', 'forma_pago_facturas.factura_id', 'facturas.id')
+            ->join('forma_pagos', 'forma_pagos.id', 'forma_pago_facturas.forma_pago_id')
+            ->where('facturas.estado', 'cerrada')
+            ->whereBetween(\DB::raw("DATE(facturas.fecha)"), [$request->fecha_desde, $request->fecha_hasta])
+            ->groupBy('facturas.id', 'facturas.fecha', 'clientes.nombres', 'facturas.observacion', 'facturas.total')
+            ->orderBy('facturas.created_at', 'desc')
+            ->get();
 
 
 
@@ -392,22 +392,22 @@ class ReporteController extends Controller
         // )
         //     ->selectRaw("'Factura' as tipo")
         //     ->join('clientes', 'clientes.id', 'facturas.cliente_id')
-           
+
         //     ->join('forma_pago_facturas', 'forma_pago_facturas.factura_id', 'facturas.id')
         //     ->join('forma_pagos', 'forma_pagos.id', 'forma_pago_facturas.forma_pago_id')
 
         //     ->orderBy('facturas.created_at', 'desc')
         //     ->whereRaw("DATE_FORMAT(facturas.fecha, '%Y-%m-%d') BETWEEN ? AND ?", [$request->fecha_desde, $request->fecha_hasta])
-          
+
         //     ->where('facturas.estado', '=',  'cerrada')
-    
+
         //     ->get();
 
 
 
 
 
-        $ordenes =  Ordenes::select(
+        $ordenes = Ordenes::select(
             'ordenes.id as idControl',
             'ordenes.fecha as fecha',
             'clientes.nombres as cliente',
@@ -418,13 +418,13 @@ class ReporteController extends Controller
             ->join('abono_ordenes', 'abono_ordenes.orden_id', 'ordenes.id')
             ->whereBetween('abono_ordenes.fecha', [$request->fecha_desde, $request->fecha_hasta])
             ->join('clientes', 'clientes.id', 'ordenes.cliente_id')
-            ->where('ordenes.estado', '=',  '1')
+            ->where('ordenes.estado', '=', '1')
             ->groupBy('abono_ordenes.orden_id')
             ->orderBy('ordenes.fecha', 'desc')
             ->get();
 
 
-        $creditos =    Creditos::select(
+        $creditos = Creditos::select(
             'creditos.id as idControl',
             'creditos.fecha',
             'clientes.nombres as cliente',
@@ -443,13 +443,13 @@ class ReporteController extends Controller
 
 
         foreach ($facturas as $factura) {
-            $total_ventas +=  $factura->totalAbono;
+            $total_ventas += $factura->totalAbono;
         }
         foreach ($ordenes as $orden) {
-            $total_ventas +=  $orden->totalAbono;
+            $total_ventas += $orden->totalAbono;
         }
         foreach ($creditos as $credito) {
-            $total_ventas +=  $credito->totalAbono;
+            $total_ventas += $credito->totalAbono;
         }
 
 
@@ -458,7 +458,7 @@ class ReporteController extends Controller
 
 
 
-        return ["total_ventas" =>  $total_ventas, "facturas" =>     $facturas, "ordenes" => $ordenes, "creditos" => $creditos];
+        return ["total_ventas" => $total_ventas, "facturas" => $facturas, "ordenes" => $ordenes, "creditos" => $creditos];
 
         // foreach ($facturas as $factura) {
         //     $detalle = Detalles::select(
@@ -477,6 +477,6 @@ class ReporteController extends Controller
         // }
 
 
-        return     $reporte;
+        return $reporte;
     }
 }
