@@ -17,8 +17,8 @@
     <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/alertifyjs@1.13.1/build/css/themes/semantic.min.css" />
     <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/alertifyjs@1.13.1/build/css/themes/bootstrap.min.css" />
     <title>Grupo Compustar</title>
-    <script defer="defer" src="/static/js/main.c0cd44a8.js"></script>
-    <link href="/static/css/main.08cdf515.css" rel="stylesheet">
+    <script defer="defer" src="/static/js/main.701bdce2.js"></script>
+    <link href="/static/css/main.f48f48b5.css" rel="stylesheet">
 </head>
 
 <body><noscript>You need to enable JavaScript to run this app.</noscript>
