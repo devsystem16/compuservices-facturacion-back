@@ -86,6 +86,15 @@ Route::post('/ordenes/total/actualizar', [OrdenesController::class, 'actualizarT
 
 Route::post('/usuarios/acceso/login', [UsuariosController::class, 'login']);
 
+// USUARIOS - CRUD
+Route::get('/usuarios', [UsuariosController::class, 'index']);
+Route::get('/usuarios/{id}', [UsuariosController::class, 'show']);
+Route::post('/usuarios', [UsuariosController::class, 'store']);
+Route::put('/usuarios/{id}', [UsuariosController::class, 'update']);
+Route::delete('/usuarios/{id}', [UsuariosController::class, 'destroy']);
+Route::put('/usuarios/{id}/cambiar-password', [UsuariosController::class, 'cambiarPassword']);
+Route::get('/usuarios/tipos/listado', [UsuariosController::class, 'tiposUsuario']);
+
 
 Route::get('/pantallapos/acceso/obtener-acceso/{tipoUsuario}', [PantallaposController::class, 'obtenerAccesos']);
 
