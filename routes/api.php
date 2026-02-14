@@ -14,6 +14,10 @@ use App\Http\Controllers\TecnicoController;
 use App\Http\Controllers\UsuariosController;
 use App\Http\Controllers\ReporteController;
 use App\Http\Controllers\RetirosController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\ReporteAvanzadoController;
+use App\Http\Controllers\CategoriaGastoController;
+use App\Http\Controllers\GastoController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -105,3 +109,39 @@ Route::get('/periodo/verificar-periodo/retiros/obtenerRetiros', [PeriodoControll
 Route::get('/retiros/ultimos-30-dias', [RetirosController::class, 'ultimos30Dias']);
 Route::resource('retiros', RetirosController::class);
 Route::post('/retiros/eliminar/retiro/{idRetiro}', [RetirosController::class, 'eliminarRetiro']);
+
+
+// DASHBOARD
+Route::get('/dashboard/resumen', [DashboardController::class, 'resumen']);
+Route::get('/dashboard/ventas-periodo', [DashboardController::class, 'ventasPeriodo']);
+Route::get('/dashboard/top-productos', [DashboardController::class, 'topProductos']);
+Route::get('/dashboard/top-clientes', [DashboardController::class, 'topClientes']);
+Route::get('/dashboard/stock-bajo', [DashboardController::class, 'stockBajo']);
+Route::get('/dashboard/creditos-pendientes', [DashboardController::class, 'creditosPendientes']);
+
+
+// REPORTES AVANZADOS
+Route::post('/reportes/utilidades', [ReporteAvanzadoController::class, 'utilidades']);
+Route::get('/reportes/inventario-valorizado', [ReporteAvanzadoController::class, 'inventarioValorizado']);
+Route::post('/reportes/cuentas-por-cobrar', [ReporteAvanzadoController::class, 'cuentasPorCobrar']);
+Route::post('/reportes/ventas-por-producto', [ReporteAvanzadoController::class, 'ventasPorProducto']);
+Route::post('/reportes/ventas-por-cliente', [ReporteAvanzadoController::class, 'ventasPorCliente']);
+Route::post('/reportes/comparativo-mensual', [ReporteAvanzadoController::class, 'comparativoMensual']);
+Route::post('/reportes/exportar-excel', [ReporteAvanzadoController::class, 'exportarExcel']);
+Route::post('/reportes/exportar-pdf', [ReporteAvanzadoController::class, 'exportarPdf']);
+
+
+// CATEGORÍA GASTOS
+Route::get('/categoria-gastos', [CategoriaGastoController::class, 'index']);
+Route::post('/categoria-gastos', [CategoriaGastoController::class, 'store']);
+Route::put('/categoria-gastos/{id}', [CategoriaGastoController::class, 'update']);
+Route::delete('/categoria-gastos/{id}', [CategoriaGastoController::class, 'destroy']);
+
+
+// GASTOS
+Route::get('/gastos', [GastoController::class, 'index']);
+Route::post('/gastos', [GastoController::class, 'store']);
+Route::put('/gastos/{id}', [GastoController::class, 'update']);
+Route::delete('/gastos/{id}', [GastoController::class, 'destroy']);
+Route::post('/gastos/por-categoria', [GastoController::class, 'porCategoria']);
+Route::post('/gastos/balance-caja', [GastoController::class, 'balanceCaja']);

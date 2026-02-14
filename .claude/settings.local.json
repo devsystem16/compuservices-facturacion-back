@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(composer require:*)",
+      "Bash(php artisan migrate:*)",
+      "Bash(php artisan migrate:status:*)",
+      "Bash(php artisan tinker --execute=\"Illuminate\\\\Support\\\\Facades\\\\Schema::dropIfExists\\(''gastos''\\);\")",
+      "Bash(php artisan:*)"
+    ]
+  }
+}
