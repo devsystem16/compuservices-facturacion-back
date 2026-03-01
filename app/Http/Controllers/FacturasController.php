@@ -16,6 +16,7 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Exception;
 use App\Services\Sri\SriService;
+use App\Services\KardexService;
 
 class FacturasController extends Controller
 {
@@ -74,13 +75,20 @@ class FacturasController extends Controller
             $productoIds = collect($request->detalle)->pluck('producto_id')->unique();
             $productos = Productos::whereIn('id', $productoIds)->get()->keyBy('id');
 
-            // Actualizar stock y preparar detalles para batch insert
+            // Actualizar stock, registrar Kardex y preparar detalles para batch insert
             $detallesInsert = [];
             $now = now();
             foreach ($request->detalle as $detalle) {
-                $producto = $productos[$detalle["producto_id"]];
-                $producto->stock = $producto->stock - $detalle["cantidad"];
-                $producto->save();
+                // Registrar salida en Kardex (actualiza stock automáticamente)
+                KardexService::registrarSalida(
+                    $detalle["producto_id"],
+                    $detalle["cantidad"],
+                    'Ventas',
+                    "Factura #{$facturas->id}",
+                    "FAC-{$facturas->id}",
+                    $request->usuario ?? null,
+                    $request->bodega_id ?? null
+                );
 
                 $detallesInsert[] = [
                     'factura_id' => $facturas->id,
@@ -320,10 +328,17 @@ class FacturasController extends Controller
 
 
 
-        $detalles = Detalles::with('producto')->where("factura_id", $factura->id)->get();
+        $detalles = Detalles::where("factura_id", $factura->id)->get();
 
         foreach ($detalles as $detalle) {
-            $detalle->producto->increment('stock', $detalle->cantidad);
+            // Registrar entrada en Kardex por anulación (actualiza stock automáticamente)
+            KardexService::registrarEntrada(
+                $detalle->producto_id,
+                $detalle->cantidad,
+                'Ventas',
+                "Anulación Factura #{$factura->id}",
+                "ANUL-FAC-{$factura->id}"
+            );
         }
 
         return ["codigo" => 200, "mensaje" => "Factura Anulada correctamente."];
@@ -391,6 +406,88 @@ class FacturasController extends Controller
         return $reporte->values();
     }
 
+
+    public function actualizarFormasPago($id, Request $request)
+    {
+        try {
+            $factura = Facturas::find($id);
+
+            if (!$factura) {
+                return response()->json(["estado" => 404, "mensaje" => "Factura no encontrada."], 200);
+            }
+
+            if ($factura->estado === 'Anulada') {
+                return response()->json(["estado" => 400, "mensaje" => "No se puede modificar una factura anulada."], 200);
+            }
+
+            $formasPago = $request->formasPago;
+
+            if (!is_array($formasPago) || empty($formasPago)) {
+                return response()->json(["estado" => 400, "mensaje" => "Debe enviar al menos una forma de pago."], 200);
+            }
+
+            $sumaFormasPago = collect($formasPago)->sum('valor');
+
+            if (round($sumaFormasPago, 2) != round($factura->total, 2)) {
+                return response()->json([
+                    "estado" => 400,
+                    "mensaje" => "La suma de las formas de pago ($" . number_format($sumaFormasPago, 2) . ") no coincide con el total de la factura ($" . number_format($factura->total, 2) . ")."
+                ], 200);
+            }
+
+            DB::beginTransaction();
+
+            // Soft delete las formas de pago existentes
+            FormaPagoFactura::where('factura_id', $factura->id)->delete();
+
+            // Insertar las nuevas formas de pago
+            $now = now();
+            $formasPagoInsert = [];
+            foreach ($formasPago as $fp) {
+                if ($fp['valor'] > 0) {
+                    $formasPagoInsert[] = [
+                        'factura_id' => $factura->id,
+                        'forma_pago_id' => $fp['forma_pago_id'],
+                        'valor' => $fp['valor'],
+                        'observacion' => '',
+                        'created_at' => $now,
+                        'updated_at' => $now,
+                    ];
+                }
+            }
+
+            if (!empty($formasPagoInsert)) {
+                FormaPagoFactura::insert($formasPagoInsert);
+            }
+
+            DB::commit();
+
+            // Recargar las formas de pago actualizadas
+            $formasPagoActualizadas = FormaPagoFactura::where('factura_id', $factura->id)
+                ->with('FormaPago:id,label')
+                ->get()
+                ->map(function ($fp) {
+                    return [
+                        'id' => $fp->id,
+                        'factura_id' => $fp->factura_id,
+                        'forma_pago_id' => $fp->forma_pago_id,
+                        'valor' => $fp->valor,
+                        'observacion' => $fp->observacion,
+                        'descripcionFormaPago' => $fp->FormaPago->label ?? null,
+                    ];
+                });
+
+            return response()->json([
+                "estado" => 200,
+                "mensaje" => "Formas de pago actualizadas correctamente.",
+                "formasPago" => $formasPagoActualizadas
+            ], 200);
+
+        } catch (Exception $e) {
+            DB::rollBack();
+            return response()->json(["estado" => 500, "mensaje" => "Error al actualizar las formas de pago."], 200);
+        }
+    }
 
     public function reporteDiario()
     {

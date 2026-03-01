@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Productos;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class ProductosController extends Controller
 {
@@ -95,21 +96,22 @@ class ProductosController extends Controller
 
     public function listado($limite)
     {
-
-
         return Productos::select(
-            'id',
-            'nombre',
-            'precio_publico',
-            'precio_tecnico',
-            'precio_compra',
-            'precio_distribuidor',
-            'codigo_barra',
-            'descripcion',
-            'stock'
+            'productos.id',
+            'productos.nombre',
+            'productos.precio_publico',
+            'productos.precio_tecnico',
+            'productos.precio_compra',
+            'productos.precio_distribuidor',
+            'productos.codigo_barra',
+            'productos.descripcion',
+            'productos.stock',
+            'productos.proveedor_id',
+            'proveedores.nombre as proveedor_nombre',
+            'proveedores.codigo as proveedor_codigo'
         )
-            // ->where('stock', '>', 0)
-            ->orderBy('created_at', 'desc')
+            ->leftJoin('proveedores', 'productos.proveedor_id', '=', 'proveedores.id')
+            ->orderBy('productos.created_at', 'desc')
             ->take($limite)
             ->get();
 
@@ -146,6 +148,23 @@ class ProductosController extends Controller
             ->orderBy('created_at', 'desc')
             ->take($limite)->get();
     }
+    public function nextId()
+    {
+        $database = DB::getDatabaseName();
+        $result = DB::select(
+            "SELECT AUTO_INCREMENT FROM information_schema.TABLES WHERE TABLE_SCHEMA = ? AND TABLE_NAME = 'productos'",
+            [$database]
+        );
+
+        $nextId = $result[0]->AUTO_INCREMENT ?? 1;
+
+        return response()->json([
+            'codigo' => 200,
+            'next_id' => $nextId,
+            'codigo_barra' => '00' . $nextId
+        ]);
+    }
+
     public function buscarProducto($texto = '')
     {
         return Productos::select(

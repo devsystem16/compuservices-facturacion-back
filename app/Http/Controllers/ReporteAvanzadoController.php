@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Creditos;
+use App\Models\DetalleCreditos;
 use App\Models\Detalles;
 use App\Models\Facturas;
 use App\Models\Productos;
@@ -21,14 +22,22 @@ class ReporteAvanzadoController extends Controller
             $fechaDesde = $request->fecha_desde;
             $fechaHasta = $request->fecha_hasta;
 
+            // Detalle por factura (sin agrupar por producto) para incluir forma de pago
             $utilidades = Detalles::select(
+                    'facturas.id as factura_id',
+                    'facturas.fecha',
                     'productos.id as producto_id',
                     'productos.nombre',
                     'productos.codigo_barra',
-                    DB::raw('SUM(detalles.cantidad) as total_cantidad'),
-                    DB::raw('SUM(detalles.subtotal) as total_venta'),
-                    DB::raw('SUM(detalles.cantidad * productos.precio_compra) as total_costo'),
-                    DB::raw('SUM(detalles.subtotal) - SUM(detalles.cantidad * productos.precio_compra) as utilidad')
+                    'detalles.cantidad',
+                    'detalles.subtotal as total_venta',
+                    DB::raw('detalles.cantidad * productos.precio_compra as total_costo'),
+                    DB::raw('detalles.subtotal - (detalles.cantidad * productos.precio_compra) as utilidad'),
+                    DB::raw("(SELECT GROUP_CONCAT(fp.label SEPARATOR ', ')
+                        FROM forma_pago_facturas fpf
+                        INNER JOIN forma_pagos fp ON fp.id = fpf.forma_pago_id
+                        WHERE fpf.factura_id = facturas.id AND fpf.deleted_at IS NULL
+                    ) as forma_pago")
                 )
                 ->join('productos', 'productos.id', '=', 'detalles.producto_id')
                 ->join('facturas', 'facturas.id', '=', 'detalles.factura_id')
@@ -36,8 +45,8 @@ class ReporteAvanzadoController extends Controller
                 ->whereNull('facturas.deleted_at')
                 ->whereNull('detalles.deleted_at')
                 ->whereBetween(DB::raw('DATE(facturas.fecha)'), [$fechaDesde, $fechaHasta])
-                ->groupBy('productos.id', 'productos.nombre', 'productos.codigo_barra')
-                ->orderBy('utilidad', 'desc')
+                ->orderBy('facturas.fecha', 'desc')
+                ->orderBy('facturas.id', 'desc')
                 ->get();
 
             $totalVenta = $utilidades->sum('total_venta');
@@ -58,6 +67,45 @@ class ReporteAvanzadoController extends Controller
             ], 200);
         } catch (Exception $e) {
             return response()->json(["codigo" => 400, "Message" => "Error al generar reporte de utilidades.", "data" => []], 200);
+        }
+    }
+
+    public function abonosCreditos(Request $request)
+    {
+        try {
+            $fechaDesde = $request->fecha_desde;
+            $fechaHasta = $request->fecha_hasta;
+
+            $abonos = DetalleCreditos::select(
+                    'detalle_creditos.id',
+                    'facturas.id as factura_id',
+                    'clientes.nombres as cliente',
+                    'detalle_creditos.fecha',
+                    'detalle_creditos.abono as monto',
+                    'forma_pagos.label as forma_pago'
+                )
+                ->join('creditos', 'creditos.id', '=', 'detalle_creditos.credito_id')
+                ->join('clientes', 'clientes.id', '=', 'creditos.cliente_id')
+                ->leftJoin('facturas', 'facturas.credito_id', '=', 'creditos.id')
+                ->leftJoin('forma_pagos', 'forma_pagos.id', '=', 'detalle_creditos.forma_pago_id')
+                ->whereNull('detalle_creditos.deleted_at')
+                ->whereNull('creditos.deleted_at')
+                ->whereBetween(DB::raw('DATE(detalle_creditos.fecha)'), [$fechaDesde, $fechaHasta])
+                ->orderBy('detalle_creditos.fecha', 'asc')
+                ->get();
+
+            $totalAbonos = $abonos->sum('monto');
+
+            return response()->json([
+                "codigo" => 200,
+                "Message" => "",
+                "data" => [
+                    "total_abonos" => $totalAbonos,
+                    "detalle" => $abonos,
+                ]
+            ], 200);
+        } catch (Exception $e) {
+            return response()->json(["codigo" => 400, "Message" => "Error al obtener abonos de créditos.", "data" => []], 200);
         }
     }
 
@@ -311,12 +359,19 @@ class ReporteAvanzadoController extends Controller
         $fechaHasta = $request->fecha_hasta;
 
         $datos = Detalles::select(
+                'facturas.id as factura_id',
+                'facturas.fecha',
                 'productos.nombre',
                 'productos.codigo_barra',
-                DB::raw('SUM(detalles.cantidad) as total_cantidad'),
-                DB::raw('SUM(detalles.subtotal) as total_venta'),
-                DB::raw('SUM(detalles.cantidad * productos.precio_compra) as total_costo'),
-                DB::raw('SUM(detalles.subtotal) - SUM(detalles.cantidad * productos.precio_compra) as utilidad')
+                'detalles.cantidad as total_cantidad',
+                'detalles.subtotal as total_venta',
+                DB::raw('detalles.cantidad * productos.precio_compra as total_costo'),
+                DB::raw('detalles.subtotal - (detalles.cantidad * productos.precio_compra) as utilidad'),
+                DB::raw("(SELECT GROUP_CONCAT(fp.label SEPARATOR ', ')
+                    FROM forma_pago_facturas fpf
+                    INNER JOIN forma_pagos fp ON fp.id = fpf.forma_pago_id
+                    WHERE fpf.factura_id = facturas.id AND fpf.deleted_at IS NULL
+                ) as forma_pago")
             )
             ->join('productos', 'productos.id', '=', 'detalles.producto_id')
             ->join('facturas', 'facturas.id', '=', 'detalles.factura_id')
@@ -324,25 +379,28 @@ class ReporteAvanzadoController extends Controller
             ->whereNull('facturas.deleted_at')
             ->whereNull('detalles.deleted_at')
             ->whereBetween(DB::raw('DATE(facturas.fecha)'), [$fechaDesde, $fechaHasta])
-            ->groupBy('productos.id', 'productos.nombre', 'productos.codigo_barra')
-            ->orderBy('utilidad', 'desc')
+            ->orderBy('facturas.fecha', 'desc')
+            ->orderBy('facturas.id', 'desc')
             ->get();
 
         $rows = $datos->map(function ($item) {
             return [
+                $item->factura_id,
+                $item->fecha,
                 $item->nombre,
                 $item->codigo_barra,
                 $item->total_cantidad,
                 number_format($item->total_venta, 2),
                 number_format($item->total_costo, 2),
                 number_format($item->utilidad, 2),
+                $item->forma_pago,
             ];
         })->toArray();
 
         return [
             'titulo' => 'Reporte de Utilidades',
             'nombre_archivo' => 'utilidades_' . $fechaDesde . '_' . $fechaHasta,
-            'headers' => ['Producto', 'Código', 'Cantidad', 'Total Venta', 'Total Costo', 'Utilidad'],
+            'headers' => ['# Fact.', 'Fecha', 'Producto', 'Código', 'Cant.', 'Total Venta', 'Total Costo', 'Utilidad', 'Forma de Pago'],
             'rows' => $rows,
             'filtros' => ['Desde' => $fechaDesde, 'Hasta' => $fechaHasta],
             'total' => $datos->sum('utilidad'),

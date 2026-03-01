@@ -1,16 +1,22 @@
 {
   "files": {
-    "main.css": "/static/css/main.f48f48b5.css",
-    "main.js": "/static/js/main.73dd55a9.js",
+    "main.css": "/static/css/main.166ee044.css",
+    "main.js": "/static/js/main.879003c8.js",
+    "static/js/239.f0a1d199.chunk.js": "/static/js/239.f0a1d199.chunk.js",
+    "static/js/213.4ca9a337.chunk.js": "/static/js/213.4ca9a337.chunk.js",
+    "static/js/455.db030f7f.chunk.js": "/static/js/455.db030f7f.chunk.js",
     "static/media/fondoLogin.png": "/static/media/fondoLogin.5e042c9f46cb1663fb90.png",
     "static/media/LogoIngreso.PNG": "/static/media/LogoIngreso.11b885933043ea67238f.PNG",
     "static/media/Factura.PNG": "/static/media/Factura.54ca728abfa027f87032.PNG",
     "index.html": "/index.html",
-    "main.f48f48b5.css.map": "/static/css/main.f48f48b5.css.map",
-    "main.73dd55a9.js.map": "/static/js/main.73dd55a9.js.map"
+    "main.166ee044.css.map": "/static/css/main.166ee044.css.map",
+    "main.879003c8.js.map": "/static/js/main.879003c8.js.map",
+    "239.f0a1d199.chunk.js.map": "/static/js/239.f0a1d199.chunk.js.map",
+    "213.4ca9a337.chunk.js.map": "/static/js/213.4ca9a337.chunk.js.map",
+    "455.db030f7f.chunk.js.map": "/static/js/455.db030f7f.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.f48f48b5.css",
-    "static/js/main.73dd55a9.js"
+    "static/css/main.166ee044.css",
+    "static/js/main.879003c8.js"
   ]
 }

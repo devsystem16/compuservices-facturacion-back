@@ -5,7 +5,23 @@
       "Bash(php artisan migrate:*)",
       "Bash(php artisan migrate:status:*)",
       "Bash(php artisan tinker --execute=\"Illuminate\\\\Support\\\\Facades\\\\Schema::dropIfExists\\(''gastos''\\);\")",
-      "Bash(php artisan:*)"
+      "Bash(php artisan:*)",
+      "Bash(php -l:*)",
+      "Bash(git -C /c/laragon/www/compuservices-facturacion-back remote -v)",
+      "Bash(git -C /c/laragon/www/compuservices-facturacion-back log --all --oneline --grep=\"react\\\\|front\\\\|menu\\\\|sidebar\")",
+      "Bash(git -C /c/laragon/www/compuservices-facturacion-back log --all --name-status --oneline)",
+      "Bash(git -C /c/laragon/www/compuservices-facturacion-back show 0cfd709 --stat)",
+      "Bash(git -C /c/laragon/www/compuservices-facturacion-back log --all --oneline)",
+      "Bash(php -r:*)",
+      "Bash(1:*)",
+      "Bash(composer show:*)",
+      "Bash(python:*)",
+      "Bash(curl:*)",
+      "Bash(php:*)",
+      "Bash(echo EXIT: $?:*)",
+      "Bash(mysqldump:*)",
+      "Bash(mysql:*)",
+      "Bash(/c/laragon/bin/mysql/mysql-8.0.30-winx64/bin/mysql.exe:*)"
     ]
   }
 }

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\AbonoOrdenes;
 use App\Models\Ordenes;
+use App\Models\OrdenHistorial;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -33,8 +34,8 @@ class OrdenesController extends Controller
 
 
     public function index()
-{
-    $ordenes = Ordenes::select(
+    {
+        $ordenes = Ordenes::select(
             'ordenes.id',
             'ordenes.cliente_id',
             'ordenes.usuario_id',
@@ -55,6 +56,7 @@ class OrdenesController extends Controller
             'ordenes.parlantes',
             'ordenes.estado',
             'ordenes.estadoOrden',
+            DB::raw("IFNULL(ordenes.estado_reparacion, 'N/A') as estado_reparacion"),
             'ordenes.last_user_update',
             'ordenes.user_update_work',
             'ordenes.factura_relacionada',
@@ -63,20 +65,21 @@ class OrdenesController extends Controller
             'ordenes.updated_at',
             'ordenes.deleted_at',
             'clientes.nombres as cliente',
+            'clientes.telefono as telefono_cliente',
             'usu.nombres as update_work',
             'usu1.nombres as last_user'
         )
-        ->join('clientes', 'ordenes.cliente_id', '=', 'clientes.id')
-        ->leftJoin('usuarios as usu', 'ordenes.user_update_work', '=', 'usu.id')
-        ->leftJoin('usuarios as usu1', 'ordenes.last_user_update', '=', 'usu1.id')
-        ->where('ordenes.estado', '=', 1)
-        ->where('ordenes.fecha', '>=', '2024-10-10 09:53:34') // 👈 filtro agregado
-        ->orderBy('ordenes.fecha', 'desc')
-        ->orderBy('ordenes.id', 'desc')
-        ->get();
+            ->join('clientes', 'ordenes.cliente_id', '=', 'clientes.id')
+            ->leftJoin('usuarios as usu', 'ordenes.user_update_work', '=', 'usu.id')
+            ->leftJoin('usuarios as usu1', 'ordenes.last_user_update', '=', 'usu1.id')
+            ->where('ordenes.estado', '=', 1)
+            ->where('ordenes.fecha', '>=', '2024-01-01 09:53:34') // 👈 filtro agregado
+            ->orderBy('ordenes.fecha', 'desc')
+            ->orderBy('ordenes.id', 'desc')
+            ->get();
 
-    return $ordenes;
-}
+        return $ordenes;
+    }
 
 
 
@@ -108,11 +111,15 @@ class OrdenesController extends Controller
                     'orden_id' => $ordenes->id,
                     'abono' => $detalle["abono"],
                     'fecha' => $detalle["fecha"],
-                    'comentario' =>  $detalle["comentario"]
+                    'comentario' => $detalle["comentario"]
                 ]
             );
         }
-        return  $ordenes;
+
+        // Historial: ingreso registrado
+        OrdenHistorial::registrar($ordenes->id, 'ingreso_registrado', 'Ingreso registrado en el sistema', $request->usuario_id);
+
+        return $ordenes;
     }
 
     /**
@@ -147,8 +154,31 @@ class OrdenesController extends Controller
      */
     public function update(Request $request, $id)
     {
+        $orden = Ordenes::find($id);
+        $trabajoAnterior = $orden->trabajo;
+        $totalAnterior = $orden->total;
 
-        return   Ordenes::find($id)->update($request->all());
+        $orden->update($request->all());
+
+        // Historial: trabajo actualizado
+        if ($request->has('trabajo') && $request->trabajo !== $trabajoAnterior) {
+            $evento = (empty($trabajoAnterior) || $trabajoAnterior === '')
+                ? 'diagnostico_iniciado'
+                : 'trabajo_actualizado';
+            OrdenHistorial::registrar($orden->id, $evento, $request->trabajo, $request->user_update_work ?? $request->last_user_update);
+
+            // Si es primera vez que se escribe trabajo, pasar a en_proceso
+            if ($evento === 'diagnostico_iniciado' && $orden->estado_reparacion === 'pendiente') {
+                $orden->update(['estado_reparacion' => 'en_proceso']);
+            }
+        }
+
+        // Historial: total definido
+        if ($request->has('total') && $request->total != $totalAnterior && $request->total > 0) {
+            OrdenHistorial::registrar($orden->id, 'total_definido', 'Total: $' . number_format($request->total, 2), $request->user_update_work ?? $request->last_user_update);
+        }
+
+        return true;
     }
 
     /**
@@ -171,20 +201,20 @@ class OrdenesController extends Controller
     {
 
         $orden = Ordenes::findOrFail($request->orden_id);
-        $detalles =  AbonoOrdenes::where("orden_id",   $request->orden_id)->get();
+        $detalles = AbonoOrdenes::where("orden_id", $request->orden_id)->get();
 
 
         $totalPagado = 0;
         foreach ($detalles as $detalle) {
-            $totalPagado  =  $totalPagado +  $detalle->abono;
+            $totalPagado = $totalPagado + $detalle->abono;
         }
 
-        $valorMasAbono =  $totalPagado +  $request->abono;
+        $valorMasAbono = $totalPagado + $request->abono;
         $saldo = $orden->total - $valorMasAbono;
 
         $cambio = 0;
 
-        if ($valorMasAbono  >= $orden->total) {
+        if ($valorMasAbono >= $orden->total) {
             $cambio = $valorMasAbono - $orden->total;
             $valorMasAbono = $orden->total;
             $saldo = 0;
@@ -199,23 +229,32 @@ class OrdenesController extends Controller
             [
                 'orden_id' => $orden->id,
                 'abono' => $request->abono,
-                'fecha' =>  date_format($date, "Y-m-d"),
-                'comentario' =>  "Abono"
+                'fecha' => date_format($date, "Y-m-d"),
+                'comentario' => "Abono"
             ]
         );
 
 
-        return   ["totalCredito"  =>  $orden->total, "totalPagado" => $valorMasAbono, "saldo" => $saldo, "cambio" =>  $cambio];
+        // Historial: abono registrado
+        OrdenHistorial::registrar($orden->id, 'abono_registrado', 'Abono de $' . number_format($request->abono, 2));
+
+        return ["totalCredito" => $orden->total, "totalPagado" => $valorMasAbono, "saldo" => $saldo, "cambio" => $cambio];
     }
 
     public function actualizarTotal(Request $request)
     {
         $orden = Ordenes::findOrFail($request->orden_id);
+        $totalAnterior = $orden->total;
         $orden->total = $request->total;
         $abono = $orden->abono;
-        $orden->saldo =   $orden->total  - $abono;
+        $orden->saldo = $orden->total - $abono;
         $orden->save();
 
-        return    ["codigo" => 200, "mensaje"   => "Total actualizado", "orden"  =>  $orden];
+        // Historial: total definido
+        if ($request->total != $totalAnterior && $request->total > 0) {
+            OrdenHistorial::registrar($orden->id, 'total_definido', 'Total: $' . number_format($request->total, 2));
+        }
+
+        return ["codigo" => 200, "mensaje" => "Total actualizado", "orden" => $orden];
     }
 }

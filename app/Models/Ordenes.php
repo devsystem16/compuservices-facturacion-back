@@ -16,7 +16,8 @@ class Ordenes extends Model
     protected $fillable = [
         'cliente_id', 'usuario_id', 'fecha', 'equipo', 'marca', 'modelo',
         'serie', 'falla', 'trabajo', 'total', 'saldo', 'abono', 'observacion', 'camara', 'teclado',
-        'microfono', 'parlantes', 'estado', 'estadoOrden', 'last_user_update', 'user_update_work', 'factura_relacionada', 'periodo_id'
+        'microfono', 'parlantes', 'estado', 'estadoOrden', 'last_user_update', 'user_update_work', 'factura_relacionada', 'periodo_id',
+        'estado_reparacion', 'visible_cliente', 'fecha_completado', 'fecha_entregado',
     ];
 
 
@@ -35,5 +36,13 @@ public function usuarioUltimaActualizacion()
     return $this->belongsTo(Usuarios::class, 'last_user_update', 'id');
 }
 
+public function historial()
+{
+    return $this->hasMany(OrdenHistorial::class, 'orden_id')->orderBy('created_at', 'asc');
+}
 
+public function abonos()
+{
+    return $this->hasMany(AbonoOrdenes::class, 'orden_id');
+}
 }

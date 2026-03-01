@@ -9,6 +9,7 @@ use App\Models\Detalles;
 use App\Models\Facturas;
 use App\Models\Periodo;
 use App\Models\Productos;
+use App\Services\KardexService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Carbon\Carbon;
@@ -116,10 +117,16 @@ class CreditosController extends Controller
             // Eliminar detalles de creditos (Abonos de pagos) en 1 query
             DetalleCreditos::where("credito_id", $idCredito)->delete();
 
-            // Devolver Stock en Productos con eager loading (2 queries en vez de 2N)
-            $detalles = Detalles::with('producto')->where("factura_id", $factura->id)->get();
+            // Devolver Stock en Productos via Kardex
+            $detalles = Detalles::where("factura_id", $factura->id)->get();
             foreach ($detalles as $detalle) {
-                $detalle->producto->increment('stock', $detalle->cantidad);
+                KardexService::registrarEntrada(
+                    $detalle->producto_id,
+                    $detalle->cantidad,
+                    'Ventas',
+                    "Anulación Crédito #{$idCredito} - Factura #{$factura->id}",
+                    "ANUL-CRED-{$idCredito}"
+                );
             }
 
             // anular Factura. 
@@ -322,6 +329,37 @@ class CreditosController extends Controller
     {
         Creditos::findOrFail($id)->delete();
     }
+    public function creditosPendientesPorCliente($clienteId)
+    {
+        $creditos = Creditos::where('cliente_id', $clienteId)
+            ->where('saldo', '>', 0)
+            ->whereNull('deleted_at')
+            ->orderBy('fecha', 'desc')
+            ->get();
+
+        $detallesAbonos = DetalleCreditos::whereIn('credito_id', $creditos->pluck('id'))
+            ->select('credito_id', \DB::raw('SUM(abono) as total_abono'))
+            ->groupBy('credito_id')
+            ->pluck('total_abono', 'credito_id');
+
+        $resultado = $creditos->map(function ($credito) use ($detallesAbonos) {
+            return [
+                'id' => $credito->id,
+                'fecha' => $credito->fecha,
+                'detalle' => $credito->detalle,
+                'total' => $credito->total,
+                'abono' => $detallesAbonos[$credito->id] ?? 0,
+                'saldo' => $credito->saldo,
+            ];
+        });
+
+        return [
+            'cantidad' => $creditos->count(),
+            'totalDeuda' => $creditos->sum('saldo'),
+            'creditos' => $resultado
+        ];
+    }
+
     public function anularPorFactura($idFactura)
     {
         try {

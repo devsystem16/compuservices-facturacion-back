@@ -44,11 +44,30 @@ class PantallaposSeeder extends Seeder
         $pantalla->title = "Cientes";
         $pantalla->save();
 
+        // Padre: Productos y Servicios
+        $padre = new Pantallapos();
+        $padre->tipo_usuario_id = 1;
+        $padre->href = null;
+        $padre->icon = "ShoppingBagIcon";
+        $padre->title = "Productos y Servicios";
+        $padre->save();
+
+        // Hijo 1: Productos
         $pantalla   = new Pantallapos();
         $pantalla->tipo_usuario_id = 1;
+        $pantalla->parent_id = $padre->id;
         $pantalla->href = "/app/products";
         $pantalla->icon = "ShoppingBagIcon";
         $pantalla->title = "Productos";
+        $pantalla->save();
+
+        // Hijo 2: Kardex
+        $pantalla   = new Pantallapos();
+        $pantalla->tipo_usuario_id = 1;
+        $pantalla->parent_id = $padre->id;
+        $pantalla->href = "/app/kardex";
+        $pantalla->icon = "ClipboardIcon";
+        $pantalla->title = "Kardex";
         $pantalla->save();
 
         $pantalla   = new Pantallapos();

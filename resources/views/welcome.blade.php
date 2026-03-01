@@ -16,9 +16,14 @@
     <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/alertifyjs@1.13.1/build/css/themes/default.min.css" />
     <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/alertifyjs@1.13.1/build/css/themes/semantic.min.css" />
     <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/alertifyjs@1.13.1/build/css/themes/bootstrap.min.css" />
+    <style>
+        .swal-sobre-modal {
+            z-index: 1400 !important
+        }
+    </style>
     <title>Grupo Compustar</title>
-    <script defer="defer" src="/static/js/main.73dd55a9.js"></script>
-    <link href="/static/css/main.f48f48b5.css" rel="stylesheet">
+    <script defer="defer" src="/static/js/main.879003c8.js"></script>
+    <link href="/static/css/main.166ee044.css" rel="stylesheet">
 </head>
 
 <body><noscript>You need to enable JavaScript to run this app.</noscript>

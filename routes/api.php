@@ -18,6 +18,15 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ReporteAvanzadoController;
 use App\Http\Controllers\CategoriaGastoController;
 use App\Http\Controllers\GastoController;
+use App\Http\Controllers\BodegasController;
+use App\Http\Controllers\KardexController;
+use App\Http\Controllers\UtilidadProductosController;
+use App\Http\Controllers\PermisoController;
+use App\Http\Controllers\CuentaContableController;
+use App\Http\Controllers\AsientoContableController;
+use App\Http\Controllers\ReporteContableController;
+use App\Http\Controllers\ConsultaPublicaController;
+use App\Http\Controllers\ProveedorController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -45,6 +54,7 @@ Route::get('/ordenes/listado/{limite}', [OrdenesController::class, 'listado']);
 
 Route::get('/productos/listado/{limite}', [ProductosController::class, 'listado']);
 Route::get('/productos/buscarProducto/{texto?}', [ProductosController::class, 'buscarProducto']);
+Route::get('/productos/next-id/codigo-barra', [ProductosController::class, 'nextId']);
 
 Route::resource('productos', ProductosController::class);
 
@@ -63,10 +73,12 @@ Route::get('/reporte/historicofacturas/{limite}', [FacturasController::class, 'h
 
 Route::post('/reporte/historicofacturas-filter', [FacturasController::class, 'historiofacturasFilter']);
 Route::post('/facturas/anulacion/nota-credito', [FacturasController::class, 'anularFactura']);
+Route::put('/facturas/{id}/formas-pago', [FacturasController::class, 'actualizarFormasPago']);
 
 
 Route::post('/creditos/abonar', [CreditosController::class, 'abonar']);
 Route::get('/creditos/lista/listado', [CreditosController::class, 'ListadoCreditos']);
+Route::get('/creditos/pendientes/cliente/{clienteId}', [CreditosController::class, 'creditosPendientesPorCliente']);
 Route::post('/creditos/anular/factura/{idFactura}', [CreditosController::class, 'anularPorFactura']);
 Route::post('/creditos/eliminar/{idCredito}', [CreditosController::class, 'eliminarCredito']);
 
@@ -131,6 +143,7 @@ Route::get('/dashboard/creditos-pendientes', [DashboardController::class, 'credi
 
 // REPORTES AVANZADOS
 Route::post('/reportes/utilidades', [ReporteAvanzadoController::class, 'utilidades']);
+Route::post('/reportes/abonos-creditos', [ReporteAvanzadoController::class, 'abonosCreditos']);
 Route::get('/reportes/inventario-valorizado', [ReporteAvanzadoController::class, 'inventarioValorizado']);
 Route::post('/reportes/cuentas-por-cobrar', [ReporteAvanzadoController::class, 'cuentasPorCobrar']);
 Route::post('/reportes/ventas-por-producto', [ReporteAvanzadoController::class, 'ventasPorProducto']);
@@ -154,3 +167,80 @@ Route::put('/gastos/{id}', [GastoController::class, 'update']);
 Route::delete('/gastos/{id}', [GastoController::class, 'destroy']);
 Route::post('/gastos/por-categoria', [GastoController::class, 'porCategoria']);
 Route::post('/gastos/balance-caja', [GastoController::class, 'balanceCaja']);
+
+
+// BODEGAS
+Route::get('/bodegas', [BodegasController::class, 'index']);
+Route::post('/bodegas', [BodegasController::class, 'store']);
+Route::put('/bodegas/{id}', [BodegasController::class, 'update']);
+Route::delete('/bodegas/{id}', [BodegasController::class, 'destroy']);
+
+
+// KARDEX
+Route::get('/kardex', [KardexController::class, 'index']);
+Route::get('/kardex/export-excel', [KardexController::class, 'exportExcel']);
+Route::get('/kardex/{id}', [KardexController::class, 'show']);
+Route::post('/kardex/ajuste', [KardexController::class, 'ajusteManual']);
+Route::post('/kardex/entrada', [KardexController::class, 'entradaManual']);
+Route::post('/kardex/transferencia', [KardexController::class, 'transferencia']);
+
+
+// UTILIDAD PRODUCTOS
+Route::get('/utilidad-productos', [UtilidadProductosController::class, 'index']);
+Route::get('/utilidad-productos/export-excel', [UtilidadProductosController::class, 'exportExcel']);
+
+
+// PERMISOS
+Route::get('/permisos', [PermisoController::class, 'index']);
+Route::get('/tipo-usuarios/{id}/permisos', [PermisoController::class, 'permisosPorTipo']);
+Route::post('/tipo-usuarios/{id}/permisos', [PermisoController::class, 'asignarPermisos']);
+Route::get('/mis-permisos/{tipoUsuarioId}', [PermisoController::class, 'misPermisos']);
+
+// PANTALLAS - Asignacion de pantallas por tipo de usuario
+Route::get('/pantallas/catalogo', [PantallaposController::class, 'catalogo']);
+Route::get('/pantallas/tipo-usuario/{id}', [PantallaposController::class, 'pantallasPorTipo']);
+Route::post('/pantallas/tipo-usuario/{id}/asignar', [PantallaposController::class, 'asignarPantallas']);
+
+
+// CONTABILIDAD - PLAN DE CUENTAS
+Route::get('/cuenta-contables', [CuentaContableController::class, 'index']);
+Route::get('/cuenta-contables/lista', [CuentaContableController::class, 'lista']);
+Route::post('/cuenta-contables', [CuentaContableController::class, 'store']);
+Route::get('/cuenta-contables/{id}', [CuentaContableController::class, 'show']);
+Route::put('/cuenta-contables/{id}', [CuentaContableController::class, 'update']);
+Route::delete('/cuenta-contables/{id}', [CuentaContableController::class, 'destroy']);
+
+// CONTABILIDAD - ASIENTOS CONTABLES
+Route::get('/asientos-contables', [AsientoContableController::class, 'index']);
+Route::post('/asientos-contables', [AsientoContableController::class, 'store']);
+Route::get('/asientos-contables/{id}', [AsientoContableController::class, 'show']);
+Route::put('/asientos-contables/{id}', [AsientoContableController::class, 'update']);
+Route::post('/asientos-contables/{id}/contabilizar', [AsientoContableController::class, 'contabilizar']);
+Route::post('/asientos-contables/{id}/anular', [AsientoContableController::class, 'anular']);
+
+// CONTABILIDAD - GENERACION AUTOMATICA
+Route::post('/asientos-contables/generar/desde-factura/{id}', [AsientoContableController::class, 'generarDesdeFactura']);
+Route::post('/asientos-contables/generar/desde-gasto/{id}', [AsientoContableController::class, 'generarDesdeGasto']);
+Route::post('/asientos-contables/generar/desde-retiro/{id}', [AsientoContableController::class, 'generarDesdeRetiro']);
+
+// CONTABILIDAD - REPORTES
+Route::post('/contabilidad/libro-diario', [ReporteContableController::class, 'libroDiario']);
+Route::post('/contabilidad/libro-mayor', [ReporteContableController::class, 'libroMayor']);
+Route::post('/contabilidad/balance-comprobacion', [ReporteContableController::class, 'balanceComprobacion']);
+Route::post('/contabilidad/balance-general', [ReporteContableController::class, 'balanceGeneral']);
+Route::post('/contabilidad/estado-resultados', [ReporteContableController::class, 'estadoResultados']);
+
+
+// PORTAL PUBLICO - SEGUIMIENTO DE REPARACIONES (sin auth)
+Route::post('/public/consulta-orden', [ConsultaPublicaController::class, 'consultarOrden'])
+    ->middleware('throttle:10,1');
+
+// ORDENES - CAMBIAR ESTADO REPARACION (interno)
+Route::post('/ordenes/cambiar-estado', [ConsultaPublicaController::class, 'cambiarEstado']);
+
+
+// PROVEEDORES
+Route::get('/proveedores', [ProveedorController::class, 'index']);
+Route::post('/proveedores', [ProveedorController::class, 'store']);
+Route::put('/proveedores/{id}', [ProveedorController::class, 'update']);
+Route::delete('/proveedores/{id}', [ProveedorController::class, 'destroy']);

@@ -419,7 +419,7 @@ class ReporteController extends Controller
             ->whereBetween('abono_ordenes.fecha', [$request->fecha_desde, $request->fecha_hasta])
             ->join('clientes', 'clientes.id', 'ordenes.cliente_id')
             ->where('ordenes.estado', '=', '1')
-            ->groupBy('abono_ordenes.orden_id')
+            ->groupBy('abono_ordenes.orden_id', 'ordenes.id', 'ordenes.fecha', 'clientes.nombres', 'ordenes.observacion')
             ->orderBy('ordenes.fecha', 'desc')
             ->get();
 
@@ -435,9 +435,7 @@ class ReporteController extends Controller
             ->join('detalle_creditos', 'detalle_creditos.credito_id', 'creditos.id')
             ->join('clientes', 'clientes.id', 'creditos.cliente_id')
             ->whereBetween('detalle_creditos.fecha', [$request->fecha_desde, $request->fecha_hasta])
-
-            ->groupBy('detalle_creditos.credito_id')
-
+            ->groupBy('detalle_creditos.credito_id', 'creditos.id', 'creditos.fecha', 'clientes.nombres', 'creditos.detalle')
             ->orderBy('creditos.fecha', 'desc')
             ->get();
 
