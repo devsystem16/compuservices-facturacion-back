@@ -22,7 +22,7 @@
         }
     </style>
     <title>Grupo Compustar</title>
-    <script defer="defer" src="/static/js/main.41b53a45.js"></script>
+    <script defer="defer" src="/static/js/main.ac5d3e16.js"></script>
     <link href="/static/css/main.166ee044.css" rel="stylesheet">
 </head>
 
