@@ -13,6 +13,7 @@ use App\Services\KardexService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Exception;
 
@@ -136,6 +137,8 @@ class CreditosController extends Controller
             $credito->delete();
 
             DB::commit();
+            Cache::forget('dashboard_resumen');
+            Cache::forget('dashboard_creditos_pendientes');
             return response()->json(["codigo" => 200, "Message" => "Crédito Anulado correctamente."], 200);
         } catch (Exception $e) {
             DB::rollBack();
@@ -186,6 +189,8 @@ class CreditosController extends Controller
             ]
         );
 
+        Cache::forget('dashboard_resumen');
+        Cache::forget('dashboard_creditos_pendientes');
         return ["totalCredito" => $credito->total, "totalPagado" => $valorMasAbono, "saldo" => $saldo, "cambio" => $cambio];
     }
 

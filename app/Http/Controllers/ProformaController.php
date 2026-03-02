@@ -6,6 +6,7 @@ use App\Models\DetalleProforma;
 use App\Models\Proforma;
 use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 class ProformaController extends Controller
@@ -18,6 +19,7 @@ class ProformaController extends Controller
             $Proforma = Proforma::where('id', $idProforma)->first();
             $Proforma->delete();
             DB::commit();
+            Cache::forget('proformas_vigentes');
             return  ["estado" =>  200,  "proforma" => $Proforma, "Message" => "Proforma Eliminada"];
         } catch (Exception $e) {
             DB::rollBack();
@@ -33,14 +35,11 @@ class ProformaController extends Controller
      */
     public function index()
     {
-
-
-
-        $proformas = Proforma::with('cliente', 'detallesProforma.producto')
-            ->whereDate('fecha_vencimiento', '>=', date('Y-m-d'))
-            ->get();
-
-        return $proformas;
+        return Cache::remember('proformas_vigentes', 120, function () {
+            return Proforma::with('cliente', 'detallesProforma.producto')
+                ->whereDate('fecha_vencimiento', '>=', date('Y-m-d'))
+                ->get();
+        });
     }
 
     /**
@@ -76,6 +75,7 @@ class ProformaController extends Controller
                 );
             }
             DB::commit();
+            Cache::forget('proformas_vigentes');
             return  ["estado" =>  200,  "proforma" => $proforma, "Message" => "Proforma Guardada"];
         } catch (Exception $e) {
             DB::rollBack();

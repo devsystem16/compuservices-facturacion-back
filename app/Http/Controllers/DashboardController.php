@@ -10,52 +10,55 @@ use App\Models\Periodo;
 use App\Models\Productos;
 use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
     public function resumen()
     {
-        try {
-            $periodoActivo = Periodo::where('estado', 'Abierto')->firstOrFail();
-            $idPeriodo = $periodoActivo->id;
-        } catch (Exception $e) {
-            return response()->json(["codigo" => 404, "Message" => "No hay período activo", "data" => []], 200);
-        }
+        return Cache::remember('dashboard_resumen', 60, function () {
+            try {
+                $periodoActivo = Periodo::where('estado', 'Abierto')->firstOrFail();
+                $idPeriodo = $periodoActivo->id;
+            } catch (Exception $e) {
+                return response()->json(["codigo" => 404, "Message" => "No hay período activo", "data" => []], 200);
+            }
 
-        $ventas = Facturas::where('periodo_id', $idPeriodo)
-            ->where('estado', 'cerrada')
-            ->select(
-                DB::raw('COUNT(*) as total_facturas'),
-                DB::raw('COALESCE(SUM(total), 0) as total_ventas')
-            )
-            ->first();
+            $ventas = Facturas::where('periodo_id', $idPeriodo)
+                ->where('estado', 'cerrada')
+                ->select(
+                    DB::raw('COUNT(*) as total_facturas'),
+                    DB::raw('COALESCE(SUM(total), 0) as total_ventas')
+                )
+                ->first();
 
-        $creditosPendientes = Creditos::where('saldo', '>', 0)
-            ->select(
-                DB::raw('COUNT(*) as total_creditos'),
-                DB::raw('COALESCE(SUM(saldo), 0) as total_saldo')
-            )
-            ->first();
+            $creditosPendientes = Creditos::where('saldo', '>', 0)
+                ->select(
+                    DB::raw('COUNT(*) as total_creditos'),
+                    DB::raw('COALESCE(SUM(saldo), 0) as total_saldo')
+                )
+                ->first();
 
-        $productosStockBajo = Productos::where('stock', '<=', 5)->count();
+            $productosStockBajo = Productos::where('stock', '<=', 5)->count();
 
-        return response()->json([
-            "codigo" => 200,
-            "Message" => "",
-            "data" => [
-                "periodo" => $periodoActivo,
-                "ventas" => [
-                    "total_facturas" => $ventas->total_facturas,
-                    "total_ventas" => $ventas->total_ventas,
-                ],
-                "creditos_pendientes" => [
-                    "total_creditos" => $creditosPendientes->total_creditos,
-                    "total_saldo" => $creditosPendientes->total_saldo,
-                ],
-                "productos_stock_bajo" => $productosStockBajo,
-            ]
-        ], 200);
+            return response()->json([
+                "codigo" => 200,
+                "Message" => "",
+                "data" => [
+                    "periodo" => $periodoActivo,
+                    "ventas" => [
+                        "total_facturas" => $ventas->total_facturas,
+                        "total_ventas" => $ventas->total_ventas,
+                    ],
+                    "creditos_pendientes" => [
+                        "total_creditos" => $creditosPendientes->total_creditos,
+                        "total_saldo" => $creditosPendientes->total_saldo,
+                    ],
+                    "productos_stock_bajo" => $productosStockBajo,
+                ]
+            ], 200);
+        });
     }
 
     public function ventasPeriodo(Request $request)
@@ -161,32 +164,36 @@ class DashboardController extends Controller
     {
         $umbral = $request->get('umbral', 5);
 
-        $productos = Productos::select('id', 'nombre', 'descripcion', 'codigo_barra', 'stock', 'precio_compra', 'precio_publico')
-            ->where('stock', '<=', $umbral)
-            ->orderBy('stock', 'asc')
-            ->get();
+        return Cache::remember('dashboard_stock_bajo_' . $umbral, 120, function () use ($umbral) {
+            $productos = Productos::select('id', 'nombre', 'descripcion', 'codigo_barra', 'stock', 'precio_compra', 'precio_publico')
+                ->where('stock', '<=', $umbral)
+                ->orderBy('stock', 'asc')
+                ->get();
 
-        return response()->json(["codigo" => 200, "Message" => "", "data" => $productos], 200);
+            return response()->json(["codigo" => 200, "Message" => "", "data" => $productos], 200);
+        });
     }
 
     public function creditosPendientes()
     {
-        $creditos = Creditos::with('cliente:id,nombres,cedula')
-            ->where('saldo', '>', 0)
-            ->select('id', 'cliente_id', 'fecha', 'detalle', 'saldo', 'total')
-            ->orderBy('fecha', 'asc')
-            ->get();
+        return Cache::remember('dashboard_creditos_pendientes', 120, function () {
+            $creditos = Creditos::with('cliente:id,nombres,cedula')
+                ->where('saldo', '>', 0)
+                ->select('id', 'cliente_id', 'fecha', 'detalle', 'saldo', 'total')
+                ->orderBy('fecha', 'asc')
+                ->get();
 
-        $totalPendiente = $creditos->sum('saldo');
+            $totalPendiente = $creditos->sum('saldo');
 
-        return response()->json([
-            "codigo" => 200,
-            "Message" => "",
-            "data" => [
-                "creditos" => $creditos,
-                "total_pendiente" => $totalPendiente,
-                "total_creditos" => $creditos->count(),
-            ]
-        ], 200);
+            return response()->json([
+                "codigo" => 200,
+                "Message" => "",
+                "data" => [
+                    "creditos" => $creditos,
+                    "total_pendiente" => $totalPendiente,
+                    "total_creditos" => $creditos->count(),
+                ]
+            ], 200);
+        });
     }
 }

@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\DB;
 use Exception;
 use App\Services\Sri\SriService;
 use App\Services\KardexService;
+use Illuminate\Support\Facades\Cache;
 
 class FacturasController extends Controller
 {
@@ -142,8 +143,9 @@ class FacturasController extends Controller
 
             //  $sriResponse = $this->sriService->procesarFactura($facturas);
 
+            Cache::forget('dashboard_resumen');
+            Cache::forget('dashboard_stock_bajo_5');
             return ["estado" => 200, "factura" => $facturas, "Message" => "Factura Guardada", "sri" => null];
-            // return ["estado" => 200, "factura" => $facturas, "Message" => "Factura Guardada", "sri" => $sriResponse];
         } catch (Exception $e) {
             DB::rollBack();
             return response()->json(["estado" => 400, "Message" => "Ocurrió un error en el servidor.", "factura" => []], 200);
@@ -341,6 +343,8 @@ class FacturasController extends Controller
             );
         }
 
+        Cache::forget('dashboard_resumen');
+        Cache::forget('dashboard_stock_bajo_5');
         return ["codigo" => 200, "mensaje" => "Factura Anulada correctamente."];
     }
 
