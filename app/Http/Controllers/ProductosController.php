@@ -37,7 +37,7 @@ class ProductosController extends Controller
     public function store(Request $request)
     {
         $productos = Productos::create($request->all());
-        return  $productos;
+        return $productos;
     }
 
     /**
@@ -71,7 +71,7 @@ class ProductosController extends Controller
      */
     public function update(Request $request, $id)
     {
-        return   Productos::find($id)->update($request->all());
+        return Productos::find($id)->update($request->all());
     }
 
     /**
@@ -83,7 +83,7 @@ class ProductosController extends Controller
     public function destroy($id)
     {
         try {
-            $response =  Productos::findOrFail($id)->delete();
+            $response = Productos::findOrFail($id)->delete();
         } catch (\Exception $e) {
             $response = 0;
         }
@@ -108,28 +108,13 @@ class ProductosController extends Controller
             'productos.stock',
             'productos.proveedor_id',
             'proveedores.nombre as proveedor_nombre',
-            'proveedores.codigo as proveedor_codigo'
+            'productos.descripcion as proveedor_codigo'
         )
             ->leftJoin('proveedores', 'productos.proveedor_id', '=', 'proveedores.id')
             ->orderBy('productos.created_at', 'desc')
             ->take($limite)
             ->get();
 
-
-
-        // return Productos::select(
-        //     'id',
-        //     'nombre',
-        //     'descripcion',
-        //     'precio_publico',
-        //     'precio_tecnico',
-        //     'precio_compra',
-        //     'precio_distribuidor',
-        //     'codigo_barra',
-        //     'stock'
-        // )
-        //     ->orderBy('created_at', 'desc')
-        //     ->take($limite)->get();
     }
 
     public function listadoStock($limite)
