@@ -184,7 +184,7 @@ Route::post('/kardex/ajuste', [KardexController::class, 'ajusteManual']);
 Route::post('/kardex/entrada', [KardexController::class, 'entradaManual']);
 Route::post('/kardex/transferencia', [KardexController::class, 'transferencia']);
 
-// myke
+// myke 3.1.1
 // UTILIDAD PRODUCTOS
 Route::get('/utilidad-productos', [UtilidadProductosController::class, 'index']);
 Route::get('/utilidad-productos/export-excel', [UtilidadProductosController::class, 'exportExcel']);
