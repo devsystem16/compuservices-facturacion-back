@@ -26,6 +26,7 @@ class ReporteAvanzadoController extends Controller
             $utilidades = Detalles::select(
                     'facturas.id as factura_id',
                     'facturas.fecha',
+                    'facturas.estado',
                     'productos.id as producto_id',
                     'productos.nombre',
                     'productos.codigo_barra',
@@ -41,7 +42,7 @@ class ReporteAvanzadoController extends Controller
                 )
                 ->join('productos', 'productos.id', '=', 'detalles.producto_id')
                 ->join('facturas', 'facturas.id', '=', 'detalles.factura_id')
-                ->where('facturas.estado', 'cerrada')
+                ->whereIn('facturas.estado', ['cerrada', 'credito', 'credito (PAGADO)'])
                 ->whereNull('facturas.deleted_at')
                 ->whereNull('detalles.deleted_at')
                 ->whereBetween(DB::raw('DATE(facturas.fecha)'), [$fechaDesde, $fechaHasta])
@@ -375,7 +376,7 @@ class ReporteAvanzadoController extends Controller
             )
             ->join('productos', 'productos.id', '=', 'detalles.producto_id')
             ->join('facturas', 'facturas.id', '=', 'detalles.factura_id')
-            ->where('facturas.estado', 'cerrada')
+            ->whereIn('facturas.estado', ['cerrada', 'credito', 'credito (PAGADO)'])
             ->whereNull('facturas.deleted_at')
             ->whereNull('detalles.deleted_at')
             ->whereBetween(DB::raw('DATE(facturas.fecha)'), [$fechaDesde, $fechaHasta])
