@@ -232,6 +232,7 @@ class CreditosController extends Controller
                 'creditos.id',
                 'creditos.cliente_id',
                 'creditos.fecha',
+                'creditos.fecha_limite',
                 'creditos.detalle',
                 'creditos.saldo',
                 'creditos.total'
@@ -254,6 +255,7 @@ class CreditosController extends Controller
                 'cliente' => $credito->cliente->nombres ?? null,
                 'telefono' => $credito->cliente->telefono ?? null,
                 'fecha' => $credito->fecha,
+                'fecha_limite' => $credito->fecha_limite,
                 'detalle' => $credito->detalle,
                 'saldo' => $credito->saldo,
                 'total' => $credito->total,

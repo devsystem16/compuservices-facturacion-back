@@ -13,7 +13,7 @@ class Creditos extends Model
 
     protected $table = 'creditos';
     protected $dates = ['deleted_at'];
-    protected $fillable = ['cliente_id', 'fecha', 'detalle', 'saldo', 'total', 'periodo_id'];
+    protected $fillable = ['cliente_id', 'fecha', 'fecha_limite', 'detalle', 'saldo', 'total', 'periodo_id'];
 
 
     public function detallesCreditos()
