@@ -1,3 +1,9 @@
 /vendor/
 /ignorar/
 .env.backup
+
+
+/bootstrap/cache/*
+!/bootstrap/cache/.gitkeep
+/storage/*.key
+/vendor
