@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Proforma de Servicios - CompuServices</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      font-size: 13px;
+      color: #222;
+      background: #f0f2f5;
+      padding: 40px 20px;
+    }
+    .page {
+      max-width: 900px;
+      margin: 0 auto;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.10);
+      overflow: hidden;
+    }
+
+    /* HEADER */
+    .header {
+      background: linear-gradient(135deg, #1a3c6e 0%, #2563a8 100%);
+      color: white;
+      padding: 36px 44px 28px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+    .header-left h1 {
+      font-size: 26px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+    .header-left p {
+      font-size: 13px;
+      opacity: 0.85;
+      margin-top: 4px;
+    }
+    .header-right {
+      text-align: right;
+    }
+    .header-right .badge {
+      background: rgba(255,255,255,0.18);
+      border: 1px solid rgba(255,255,255,0.35);
+      border-radius: 6px;
+      padding: 10px 18px;
+      font-size: 13px;
+      line-height: 1.8;
+    }
+    .header-right .badge strong {
+      font-size: 16px;
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    /* META INFO */
+    .meta {
+      background: #f7f9fc;
+      border-bottom: 1px solid #e2e8f0;
+      padding: 16px 44px;
+      display: flex;
+      gap: 40px;
+      font-size: 12.5px;
+      color: #555;
+    }
+    .meta span strong { color: #1a3c6e; }
+
+    /* BODY */
+    .body { padding: 32px 44px 44px; }
+
+    /* SECTION */
+    .section { margin-bottom: 28px; }
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .section-number {
+      background: #1a3c6e;
+      color: white;
+      border-radius: 50%;
+      width: 26px;
+      height: 26px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    .section-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #1a3c6e;
+    }
+    .section-desc {
+      font-size: 12px;
+      color: #666;
+      margin-bottom: 10px;
+      padding-left: 36px;
+      line-height: 1.6;
+    }
+    .section-desc ul {
+      margin-left: 16px;
+    }
+    .section-desc li {
+      margin-bottom: 2px;
+    }
+
+    /* TABLE */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12.5px;
+    }
+    thead tr {
+      background: #1a3c6e;
+      color: white;
+    }
+    thead th {
+      padding: 8px 12px;
+      text-align: left;
+      font-weight: 600;
+    }
+    thead th:last-child { text-align: right; }
+    tbody tr:nth-child(even) { background: #f7f9fc; }
+    tbody tr:hover { background: #eef2ff; }
+    tbody td {
+      padding: 7px 12px;
+      border-bottom: 1px solid #e8ecf2;
+      color: #333;
+    }
+    tbody td:last-child { text-align: right; font-weight: 600; }
+    .subtotal-row td {
+      background: #e8f0fd !important;
+      font-weight: 700;
+      color: #1a3c6e;
+      border-top: 2px solid #2563a8;
+    }
+
+    /* RESUMEN */
+    .resumen-section { margin-top: 36px; }
+    .resumen-section .section-header { margin-bottom: 12px; }
+    .resumen-table thead tr { background: #0f2547; }
+    .resumen-table .total-row td {
+      background: #1a3c6e !important;
+      color: white !important;
+      font-size: 14px;
+      font-weight: 700;
+    }
+    .resumen-table .total-row td:last-child { text-align: right; }
+
+    /* FOOTER */
+    .footer {
+      background: #f7f9fc;
+      border-top: 2px solid #e2e8f0;
+      padding: 20px 44px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      font-size: 12px;
+      color: #666;
+      gap: 24px;
+    }
+    .footer-note { line-height: 1.7; }
+    .footer-note strong { color: #1a3c6e; display: block; margin-bottom: 4px; }
+    .footer-total {
+      text-align: right;
+      flex-shrink: 0;
+    }
+    .footer-total .amount {
+      font-size: 28px;
+      font-weight: 800;
+      color: #1a3c6e;
+    }
+    .footer-total .label {
+      font-size: 11px;
+      color: #888;
+    }
+
+    @media print {
+      body { background: white; padding: 0; }
+      .page { box-shadow: none; border-radius: 0; }
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-left">
+      <h1>PROFORMA DE SERVICIOS</h1>
+      <p>Desarrollo de Software a Medida</p>
+    </div>
+    <div class="header-right">
+      <div class="badge">
+        <strong>PROFORMA #001-2026</strong>
+        <span>Fecha: 12 de marzo de 2026</span>
+        <span>Validez: 15 días</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- META -->
+  <div class="meta">
+    <span><strong>Cliente:</strong> CompuServices</span>
+    <span><strong>Proyecto:</strong> Sistema de Facturación – Módulos y Mejoras</span>
+    <span><strong>Período:</strong> Febrero – Marzo 2026</span>
+    <span><strong>Moneda:</strong> USD</span>
+  </div>
+
+  <div class="body">
+
+    <!-- 1 -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-number">1</div>
+        <div class="section-title">Optimización de Rendimiento del Sistema</div>
+      </div>
+      <div class="section-desc">
+        <ul>
+          <li>Diagnóstico y corrección de consultas lentas (problema N+1) en módulos de facturas, créditos y reportes</li>
+          <li>Creación de índices en base de datos para columnas de búsqueda frecuente</li>
+          <li>Implementación de carga optimizada, inserciones por lote y agregaciones SQL</li>
+        </ul>
+      </div>
+      <table>
+        <thead><tr><th>Detalle</th><th>Horas</th><th>Valor/hora</th><th>Subtotal</th></tr></thead>
+        <tbody>
+          <tr><td>Diagnóstico y análisis de consultas</td><td>4 h</td><td>$20.00</td><td>$80.00</td></tr>
+          <tr><td>Corrección N+1 y optimización de consultas</td><td>8 h</td><td>$20.00</td><td>$160.00</td></tr>
+          <tr><td>Índices de base de datos</td><td>3 h</td><td>$20.00</td><td>$60.00</td></tr>
+          <tr class="subtotal-row"><td colspan="3">SUBTOTAL</td><td>$300.00</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 2 -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-number">2</div>
+        <div class="section-title">Módulo de Kardex / Control de Inventario</div>
+      </div>
+      <div class="section-desc">
+        <ul>
+          <li>Control de entradas, salidas, ajustes y transferencias entre bodegas</li>
+          <li>Integración automática con facturación: descuenta stock al facturar y lo repone al anular</li>
+          <li>Gestión completa de bodegas (crear, editar, eliminar)</li>
+          <li>Exportación de movimientos de inventario a Excel</li>
+        </ul>
+      </div>
+      <table>
+        <thead><tr><th>Detalle</th><th>Horas</th><th>Valor/hora</th><th>Subtotal</th></tr></thead>
+        <tbody>
+          <tr><td>Diseño de base de datos (bodegas y movimientos)</td><td>4 h</td><td>$20.00</td><td>$80.00</td></tr>
+          <tr><td>Servicio de movimientos de inventario</td><td>10 h</td><td>$20.00</td><td>$200.00</td></tr>
+          <tr><td>Integración con facturación y créditos</td><td>6 h</td><td>$20.00</td><td>$120.00</td></tr>
+          <tr><td>CRUD de bodegas</td><td>4 h</td><td>$20.00</td><td>$80.00</td></tr>
+          <tr><td>Exportación a Excel</td><td>3 h</td><td>$20.00</td><td>$60.00</td></tr>
+          <tr class="subtotal-row"><td colspan="3">SUBTOTAL</td><td>$540.00</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 3 -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-number">3</div>
+        <div class="section-title">Módulo de Permisos por Rol de Usuario</div>
+      </div>
+      <div class="section-desc">
+        <ul>
+          <li>76 permisos distribuidos en 15 módulos del sistema</li>
+          <li>Asignación de permisos por tipo de usuario (4 roles configurados)</li>
+          <li>Control de acceso granular a cada función del sistema</li>
+          <li>Permiso específico para modificación de fecha límite en créditos</li>
+        </ul>
+      </div>
+      <table>
+        <thead><tr><th>Detalle</th><th>Horas</th><th>Valor/hora</th><th>Subtotal</th></tr></thead>
+        <tbody>
+          <tr><td>Diseño del sistema de permisos y roles</td><td>4 h</td><td>$20.00</td><td>$80.00</td></tr>
+          <tr><td>Implementación de 76 permisos en 15 módulos</td><td>8 h</td><td>$20.00</td><td>$160.00</td></tr>
+          <tr><td>Asignación y gestión por tipo de usuario</td><td>4 h</td><td>$20.00</td><td>$80.00</td></tr>
+          <tr class="subtotal-row"><td colspan="3">SUBTOTAL</td><td>$320.00</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 4 -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-number">4</div>
+        <div class="section-title">Portal de Seguimiento para Clientes</div>
+      </div>
+      <div class="section-desc">
+        <ul>
+          <li>Consulta pública del estado de órdenes de reparación sin necesidad de login</li>
+          <li>Estados de reparación visibles al cliente en tiempo real</li>
+          <li>Historial automático de cambios de estado por orden</li>
+          <li>Integración en creación, actualización y abonos de órdenes</li>
+          <li>Protección anti-abuso (límite de consultas por minuto)</li>
+        </ul>
+      </div>
+      <table>
+        <thead><tr><th>Detalle</th><th>Horas</th><th>Valor/hora</th><th>Subtotal</th></tr></thead>
+        <tbody>
+          <tr><td>Diseño e implementación de consulta pública</td><td>5 h</td><td>$20.00</td><td>$100.00</td></tr>
+          <tr><td>Historial de cambios de estado</td><td>4 h</td><td>$20.00</td><td>$80.00</td></tr>
+          <tr><td>Integración en módulo de órdenes</td><td>4 h</td><td>$20.00</td><td>$80.00</td></tr>
+          <tr><td>Seguridad y protección del endpoint público</td><td>2 h</td><td>$20.00</td><td>$40.00</td></tr>
+          <tr class="subtotal-row"><td colspan="3">SUBTOTAL</td><td>$300.00</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 5 -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-number">5</div>
+        <div class="section-title">Módulo de Gestión de Usuarios</div>
+      </div>
+      <div class="section-desc">
+        <ul>
+          <li>Creación, edición y eliminación de usuarios del sistema</li>
+          <li>Asignación de roles y tipos de usuario</li>
+          <li>Control de acceso al panel administrativo</li>
+        </ul>
+      </div>
+      <table>
+        <thead><tr><th>Detalle</th><th>Horas</th><th>Valor/hora</th><th>Subtotal</th></tr></thead>
+        <tbody>
+          <tr><td>CRUD de usuarios y asignación de roles</td><td>6 h</td><td>$20.00</td><td>$120.00</td></tr>
+          <tr><td>Interfaz de administración de usuarios</td><td>4 h</td><td>$20.00</td><td>$80.00</td></tr>
+          <tr class="subtotal-row"><td colspan="3">SUBTOTAL</td><td>$200.00</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 6 -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-number">6</div>
+        <div class="section-title">Mejoras de Interfaz de Usuario (UI/UX)</div>
+      </div>
+      <div class="section-desc">
+        <ul>
+          <li>Rediseño del Dashboard principal con nuevas métricas y gráficos</li>
+          <li>Rediseño del módulo de Punto de Venta</li>
+          <li>Login mejorado con imagen de fondo personalizable</li>
+          <li>Reportes avanzados con filtros adicionales</li>
+        </ul>
+      </div>
+      <table>
+        <thead><tr><th>Detalle</th><th>Horas</th><th>Valor/hora</th><th>Subtotal</th></tr></thead>
+        <tbody>
+          <tr><td>Rediseño de Dashboard</td><td>5 h</td><td>$20.00</td><td>$100.00</td></tr>
+          <tr><td>Rediseño de Punto de Venta</td><td>5 h</td><td>$20.00</td><td>$100.00</td></tr>
+          <tr><td>Login con imagen personalizable</td><td>3 h</td><td>$20.00</td><td>$60.00</td></tr>
+          <tr><td>Reportes avanzados con nuevos filtros</td><td>4 h</td><td>$20.00</td><td>$80.00</td></tr>
+          <tr class="subtotal-row"><td colspan="3">SUBTOTAL</td><td>$340.00</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 7 -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-number">7</div>
+        <div class="section-title">Mejoras en Módulos Existentes</div>
+      </div>
+      <div class="section-desc">
+        <ul>
+          <li>Habilitación de edición de proveedores</li>
+          <li>Campo de observaciones en facturas y proformas</li>
+          <li>Corrección en manejo de series de documentos</li>
+          <li>Correcciones en formas de pago dentro de reportes</li>
+          <li>Fecha límite configurable en módulo de créditos</li>
+        </ul>
+      </div>
+      <table>
+        <thead><tr><th>Detalle</th><th>Horas</th><th>Valor/hora</th><th>Subtotal</th></tr></thead>
+        <tbody>
+          <tr><td>Edición de proveedores</td><td>2 h</td><td>$20.00</td><td>$40.00</td></tr>
+          <tr><td>Observaciones en facturas y proformas</td><td>2 h</td><td>$20.00</td><td>$40.00</td></tr>
+          <tr><td>Corrección de series y formas de pago</td><td>3 h</td><td>$20.00</td><td>$60.00</td></tr>
+          <tr><td>Fecha límite configurable en créditos</td><td>3 h</td><td>$20.00</td><td>$60.00</td></tr>
+          <tr class="subtotal-row"><td colspan="3">SUBTOTAL</td><td>$200.00</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 8 -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-number">8</div>
+        <div class="section-title">Infraestructura y Despliegue en Producción</div>
+      </div>
+      <div class="section-desc">
+        <ul>
+          <li>Configuración de despliegue automático (CI/CD)</li>
+          <li>Configuración y ajuste del servidor de producción (Hostinger)</li>
+          <li>Versionado del sistema hasta v3.1.1</li>
+        </ul>
+      </div>
+      <table>
+        <thead><tr><th>Detalle</th><th>Horas</th><th>Valor/hora</th><th>Subtotal</th></tr></thead>
+        <tbody>
+          <tr><td>Configuración de despliegue automático</td><td>3 h</td><td>$20.00</td><td>$60.00</td></tr>
+          <tr><td>Configuración servidor de producción</td><td>3 h</td><td>$20.00</td><td>$60.00</td></tr>
+          <tr class="subtotal-row"><td colspan="3">SUBTOTAL</td><td>$120.00</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- RESUMEN -->
+    <div class="resumen-section">
+      <div class="section-header">
+        <div class="section-number" style="background:#0f2547; width:auto; border-radius:4px; padding:0 10px; font-size:12px;">RESUMEN</div>
+        <div class="section-title" style="font-size:15px;">Total General</div>
+      </div>
+      <table class="resumen-table">
+        <thead><tr><th>#</th><th>Módulo / Funcionalidad</th><th style="text-align:right">Subtotal</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>Optimización de Rendimiento del Sistema</td><td>$300.00</td></tr>
+          <tr><td>2</td><td>Módulo de Kardex / Control de Inventario</td><td>$540.00</td></tr>
+          <tr><td>3</td><td>Módulo de Permisos por Rol de Usuario</td><td>$320.00</td></tr>
+          <tr><td>4</td><td>Portal de Seguimiento para Clientes</td><td>$300.00</td></tr>
+          <tr><td>5</td><td>Módulo de Gestión de Usuarios</td><td>$200.00</td></tr>
+          <tr><td>6</td><td>Mejoras de Interfaz de Usuario (UI/UX)</td><td>$340.00</td></tr>
+          <tr><td>7</td><td>Mejoras en Módulos Existentes</td><td>$200.00</td></tr>
+          <tr><td>8</td><td>Infraestructura y Despliegue en Producción</td><td>$120.00</td></tr>
+          <tr class="total-row"><td colspan="2"><strong>TOTAL A COBRAR</strong></td><td><strong>$2,320.00</strong></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div><!-- /body -->
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <div>
+      <div class="footer-note">
+        <strong>Condiciones de pago</strong>
+        50% al inicio del acuerdo — 50% contra entrega final
+      </div>
+      <div class="footer-note" style="margin-top:12px;">
+        <strong>Notas</strong>
+        Todos los precios están en dólares americanos (USD) e incluyen desarrollo, pruebas y despliegue en producción. Validez de la proforma: 15 días a partir de la fecha de emisión.
+      </div>
+    </div>
+    <div class="footer-total">
+      <div class="label">TOTAL A COBRAR</div>
+      <div class="amount">$2,320.00</div>
+      <div class="label">Dólares Americanos</div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
