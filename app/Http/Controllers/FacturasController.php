@@ -201,7 +201,8 @@ class FacturasController extends Controller
         $facturas = Facturas::with([
             'cliente:id,nombres',
             'detalles.producto:id,nombre,codigo_barra',
-            'formaPagoFactura.FormaPago:id,label'
+            'formaPagoFactura.FormaPago:id,label',
+            'credito.detallesCreditos.FormaPago:id,label'
         ])
             ->orderBy('created_at', 'desc')
             ->take($limite)
@@ -218,6 +219,7 @@ class FacturasController extends Controller
                     'total' => $factura->total,
                     'observacion' => $factura->observacion,
                     'estado' => $factura->estado,
+                    'es_credito' => (bool) $factura->es_credito,
                     'detalles' => $factura->detalles->map(function ($detalle) {
                         return [
                             'id' => $detalle->id,
@@ -229,16 +231,28 @@ class FacturasController extends Controller
                             'precio_tipo' => $detalle->precio_tipo,
                         ];
                     }),
-                    'formasPago' => $factura->formaPagoFactura->map(function ($fp) {
-                        return [
-                            'id' => $fp->id,
-                            'factura_id' => $fp->factura_id,
-                            'forma_pago_id' => $fp->forma_pago_id,
-                            'valor' => $fp->valor,
-                            'observacion' => $fp->observacion,
-                            'descripcionFormaPago' => $fp->FormaPago->label ?? null,
-                        ];
-                    }),
+                    'formasPago' => $factura->es_credito && $factura->credito
+                        ? $factura->credito->detallesCreditos->map(function ($dc) {
+                            return [
+                                'id' => $dc->id,
+                                'forma_pago_id' => $dc->forma_pago_id,
+                                'valor' => $dc->abono,
+                                'fecha' => $dc->fecha,
+                                'comentario' => $dc->comentario,
+                                'descripcionFormaPago' => $dc->FormaPago->label ?? null,
+                            ];
+                        })
+                        : $factura->formaPagoFactura->map(function ($fp) {
+                            return [
+                                'id' => $fp->id,
+                                'factura_id' => $fp->factura_id,
+                                'forma_pago_id' => $fp->forma_pago_id,
+                                'valor' => $fp->valor,
+                                'fecha' => null,
+                                'comentario' => $fp->observacion,
+                                'descripcionFormaPago' => $fp->FormaPago->label ?? null,
+                            ];
+                        }),
                 ]
             ];
         });
@@ -353,7 +367,8 @@ class FacturasController extends Controller
         $facturas = Facturas::with([
             'cliente:id,nombres,cedula',
             'detalles.producto:id,nombre,codigo_barra',
-            'formaPagoFactura.FormaPago:id,label'
+            'formaPagoFactura.FormaPago:id,label',
+            'credito.detallesCreditos.FormaPago:id,label'
         ])
             ->whereHas('cliente', function ($query) use ($request) {
                 $searchTerms = explode(' ', $request->filter);
@@ -382,6 +397,7 @@ class FacturasController extends Controller
                     'total' => $factura->total,
                     'observacion' => $factura->observacion,
                     'estado' => $factura->estado,
+                    'es_credito' => (bool) $factura->es_credito,
                     'detalles' => $factura->detalles->map(function ($detalle) {
                         return [
                             'id' => $detalle->id,
@@ -393,16 +409,28 @@ class FacturasController extends Controller
                             'precio_tipo' => $detalle->precio_tipo,
                         ];
                     }),
-                    'formasPago' => $factura->formaPagoFactura->map(function ($fp) {
-                        return [
-                            'id' => $fp->id,
-                            'factura_id' => $fp->factura_id,
-                            'forma_pago_id' => $fp->forma_pago_id,
-                            'valor' => $fp->valor,
-                            'observacion' => $fp->observacion,
-                            'descripcionFormaPago' => $fp->FormaPago->label ?? null,
-                        ];
-                    }),
+                    'formasPago' => $factura->es_credito && $factura->credito
+                        ? $factura->credito->detallesCreditos->map(function ($dc) {
+                            return [
+                                'id' => $dc->id,
+                                'forma_pago_id' => $dc->forma_pago_id,
+                                'valor' => $dc->abono,
+                                'fecha' => $dc->fecha,
+                                'comentario' => $dc->comentario,
+                                'descripcionFormaPago' => $dc->FormaPago->label ?? null,
+                            ];
+                        })
+                        : $factura->formaPagoFactura->map(function ($fp) {
+                            return [
+                                'id' => $fp->id,
+                                'factura_id' => $fp->factura_id,
+                                'forma_pago_id' => $fp->forma_pago_id,
+                                'valor' => $fp->valor,
+                                'fecha' => null,
+                                'comentario' => $fp->observacion,
+                                'descripcionFormaPago' => $fp->FormaPago->label ?? null,
+                            ];
+                        }),
                 ]
             ];
         });

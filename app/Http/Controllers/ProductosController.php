@@ -71,7 +71,17 @@ class ProductosController extends Controller
      */
     public function update(Request $request, $id)
     {
-        return Productos::find($id)->update($request->all());
+        $producto = Productos::find($id);
+        $data = $request->all();
+
+        if (isset($data['proveedor_codigo']) && $data['proveedor_codigo'] !== '') {
+            $proveedor = \App\Models\Proveedor::where('codigo', $data['proveedor_codigo'])->first();
+            if ($proveedor) {
+                $data['proveedor_id'] = $proveedor->id;
+            }
+        }
+
+        return $producto->update($data);
     }
 
     /**
@@ -108,7 +118,7 @@ class ProductosController extends Controller
             'productos.stock',
             'productos.proveedor_id',
             'proveedores.nombre as proveedor_nombre',
-            'productos.descripcion as proveedor_codigo'
+            'proveedores.codigo as proveedor_codigo'
         )
             ->leftJoin('proveedores', 'productos.proveedor_id', '=', 'proveedores.id')
             ->orderBy('productos.created_at', 'desc')
