@@ -425,7 +425,7 @@ class ReporteController extends Controller
 
 
         $creditos = Creditos::select(
-            'creditos.id as idControl',
+            \DB::raw('COALESCE(facturas.id, creditos.id) as idControl'),
             'creditos.fecha',
             'clientes.nombres as cliente',
             'creditos.detalle as observacion'
@@ -434,8 +434,9 @@ class ReporteController extends Controller
             ->selectRaw("'Crédito' as tipo")
             ->join('detalle_creditos', 'detalle_creditos.credito_id', 'creditos.id')
             ->join('clientes', 'clientes.id', 'creditos.cliente_id')
+            ->leftJoin('facturas', 'facturas.credito_id', '=', 'creditos.id')
             ->whereBetween('detalle_creditos.fecha', [$request->fecha_desde, $request->fecha_hasta])
-            ->groupBy('detalle_creditos.credito_id', 'creditos.id', 'creditos.fecha', 'clientes.nombres', 'creditos.detalle')
+            ->groupBy('detalle_creditos.credito_id', 'creditos.id', 'facturas.id', 'creditos.fecha', 'clientes.nombres', 'creditos.detalle')
             ->orderBy('creditos.fecha', 'desc')
             ->get();
 
